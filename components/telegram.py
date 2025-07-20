@@ -1,3 +1,5 @@
+import json
+
 import requests
 
 class TelegramComponent:
@@ -17,12 +19,12 @@ class TelegramComponent:
     def bot_token(self, bot_token: str):
         self.__bot_token = bot_token
 
-    def send_telegram_message(self, chat_id: int, text: str):
+    def send_telegram_message(self, chat_id: int, text: str, parse_mode="HTML"):
         url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
         data = {
             "chat_id": chat_id,
             "text": text,
-            "parse_mode": "HTML"
+            "parse_mode": parse_mode
         }
         response = requests.post(url, data = data)
         #print(f"Telegram response: {response.status_code}, {response.text}")

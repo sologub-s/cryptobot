@@ -2,6 +2,7 @@ from datetime import date, datetime
 
 from .binance import BinanceComponent
 from .telegram import TelegramComponent
+from .telegram_hook import create_hook_listener
 
 class ServiceComponent:
     def __init__(
@@ -47,3 +48,6 @@ class ServiceComponent:
         message = self.binance_component.format_order(order)
         print("Sending to Telegram...\n")
         self.telegram_component.send_telegram_message(chat_id, message)
+
+    def telegram_hook_listener(self):
+        create_hook_listener()
