@@ -1,11 +1,12 @@
+
 from .service import ServiceComponent
 from .binance import BinanceComponent
 from .telegram import TelegramComponent
-from .telegram_hook import create_hook_listener
+from .commands_dispatcher import dispatch, parse_args
 
 __all__ = [
+    "dispatch", "parse_args",
     "ServiceComponent",
     "BinanceComponent",
     "TelegramComponent",
-    "create_hook_listener",
 ]
