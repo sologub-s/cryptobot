@@ -1,8 +1,5 @@
-from datetime import date, datetime
-
 from .binance import BinanceComponent
 from .telegram import TelegramComponent
-from .telegram_hook import create_hook_listener
 
 class ServiceComponent:
     def __init__(
@@ -37,7 +34,7 @@ class ServiceComponent:
     def telegram_component(self, telegram_component: TelegramComponent):
         self.__telegram_component = telegram_component
 
-    def read_orders(self, chat_id: int):
+    def show_orders(self, chat_id: int):
         orders = self.binance_component.get_open_orders()
         message = self.binance_component.format_open_orders(orders)
         print("Sending to Telegram...\n")
@@ -49,5 +46,8 @@ class ServiceComponent:
         print("Sending to Telegram...\n")
         self.telegram_component.send_telegram_message(chat_id, message)
 
-    def telegram_hook_listener(self):
-        create_hook_listener()
+    def show_price(self, binance_order_symbol: str, chat_id: int):
+        price: dict = self.binance_component.get_price_for_binance_symbol(binance_order_symbol)
+        message = self.binance_component.format_price(binance_order_symbol, price)
+        print("Sending to Telegram...\n")
+        self.telegram_component.send_telegram_message(chat_id, message)

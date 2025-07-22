@@ -24,7 +24,16 @@ class TelegramComponent:
         data = {
             "chat_id": chat_id,
             "text": text,
-            "parse_mode": parse_mode
+            "parse_mode": parse_mode,
+            "reply_markup": json.dumps({
+                "keyboard": [
+                    #["show_orders", "status"],
+                    ["show_orders",],
+                    ["show_price:ETHUSDT",],
+                ],
+                "resize_keyboard": True,
+                "one_time_keyboard": False
+            }),
         }
         response = requests.post(url, data = data)
         #print(f"Telegram response: {response.status_code}, {response.text}")
