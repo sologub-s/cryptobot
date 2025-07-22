@@ -50,13 +50,32 @@ class BinanceComponent:
             print(f"ERROR: cannot get the order with binance_order_id: {binance_order_id}", e)
             return {}
 
-    def format_order(self, order):
+    def get_price_for_binance_symbol(self, binance_order_symbol: str):
+        try:
+            price: dict = self.binance_client.get_avg_price(
+                symbol = binance_order_symbol,
+            )
+            print(json.dumps(price, indent=4))
+            return price
+        except Exception as e:
+            print(f"ERROR: cannot get the price for binance_order_symbol: {binance_order_symbol}", e)
+            return {}
+
+    def format_order(self, order: dict):
+            print(json.dumps(order, indent=4))
             return f"ID: <code>{order['orderId']}</code>\n" \
-                   f"Date: <b>{datetime.fromtimestamp(1752699293468 / 1000).strftime("%Y-%m-%d %H:%M:%S")}</b>\n" \
+                   f"Date: <b>{datetime.fromtimestamp(order['updateTime'] / 1000).strftime("%Y-%m-%d %H:%M:%S")}</b>\n" \
                    f"Type: <b>{order['type']}</b>\n" \
                    f"Side: {order['side']}\n" \
                    f"Symbol: {order['symbol']}\n" \
                    f"Price: {order['price']}\n" \
                    f"Origin qty: {order['origQty']}\n" \
                    f"Status: {order['status']}\n" \
+                   f"---"
+
+    def format_price(self, binance_symbol: str, price: dict):
+            return f"The price of: <code>{binance_symbol}</code>\n" \
+                   f"Price: <b>{price['price']}</b>\n" \
+                   f"Mins: <b>{price['mins']}</b>\n" \
+                   f"Close time: <b>{datetime.fromtimestamp(price['closeTime'] / 1000).strftime("%Y-%m-%d %H:%M:%S")}</b>\n" \
                    f"---"

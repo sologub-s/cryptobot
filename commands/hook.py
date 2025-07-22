@@ -29,18 +29,30 @@ class HookCommand(AbstractCommand):
             chat_id = json_dict["message"]["chat"]["id"]
             text = json_dict["message"]["text"]
 
-            if text == "show_orders":
+            if text.startswith("/start"):
+                text = text.replace("/start", "", 1)
+
+            if text.lower() == "show_orders":
                 self._service_component.show_orders(chat_id)
 
-            elif text.startswith("show_order_status:"):
+            elif text.lower().startswith("show_order_status:"):
                 text = text.replace(" ", "")
                 binance_order_id = text.split(":")[1]
-                binance_symbol = text.split(":")[2]
+                binance_symbol = text.split(":")[2].upper()
                 self._service_component.show_order_status(
                     binance_order_id,
                     binance_symbol,
                     chat_id,
                 )
+
+            elif text.lower().startswith("show_price:"):
+                text = text.replace(" ", "")
+                binance_symbol = text.split(":")[1].upper()
+                self._service_component.show_price(
+                    binance_symbol,
+                    chat_id,
+                )
+
             else:
                 self._service_component.telegram_component.send_telegram_message(chat_id, "Unknown command: " + text)
         except json.JSONDecodeError:

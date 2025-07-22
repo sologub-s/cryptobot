@@ -1,7 +1,7 @@
 import argparse
 
 from commands import ShowOrdersCommand, TelegramHookListenerCommand, HookCommand
-from commands import ShowOrderStatusCommand
+from commands import ShowOrderStatusCommand, ShowPriceCommand, MiscCommand
 
 def dispatch(di: dict, args) -> None | tuple[None, type[ShowOrdersCommand]] | tuple[str, None]:
 
@@ -23,6 +23,16 @@ def dispatch(di: dict, args) -> None | tuple[None, type[ShowOrdersCommand]] | tu
                 )
                 .set_deps(di['service_component'])
         )
+    elif args.command == "show_price":
+        return (
+            None,
+            ShowPriceCommand()
+                .set_payload(
+                    args.binance_symbol,
+                    args.chat_id,
+                )
+                .set_deps(di['service_component'])
+        )
     elif args.command == "telegram_hook_listener":
         return (
             None,
@@ -37,6 +47,12 @@ def dispatch(di: dict, args) -> None | tuple[None, type[ShowOrdersCommand]] | tu
         return (
             None,
             HookCommand()
+                .set_deps(di['service_component'])
+        )
+    elif args.command == "misc":
+        return (
+            None,
+            MiscCommand()
                 .set_deps(di['service_component'])
         )
 
@@ -61,6 +77,11 @@ def parse_args(cli_name: str):
     parser_status.add_argument("--binance_symbol", default="ETHUSDT", help="Trading pair (symbol)")
     parser_status.add_argument("--chat_id", type=int, help="Telegram chat id")
 
+    # show_price
+    parser_price = subparsers.add_parser("show_price", help="Show symbol price")
+    parser_price.add_argument("--binance_symbol", default="ETHUSDT", help="Trading pair (symbol)")
+    parser_price.add_argument("--chat_id", type=int, help="Telegram chat id")
+
     # telegram_hook
     parser_telegram_hook = subparsers.add_parser("telegram_hook_listener", help="Wait for Telegram hooks")
     parser_telegram_hook.add_argument("--host", type=str, default="0.0.0.0", help="Host to listen to")
@@ -68,6 +89,8 @@ def parse_args(cli_name: str):
     parser_telegram_hook.add_argument("--chat_id", type=int, help="Telegram chat id")
 
     subparsers.add_parser("hook", help="Dispatch & execute hook")
+
+    subparsers.add_parser("misc", help="Some misc checks etc.")
 
     args = parser.parse_args()
     return args

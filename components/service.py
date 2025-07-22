@@ -45,3 +45,9 @@ class ServiceComponent:
         message = self.binance_component.format_order(order)
         print("Sending to Telegram...\n")
         self.telegram_component.send_telegram_message(chat_id, message)
+
+    def show_price(self, binance_order_symbol: str, chat_id: int):
+        price: dict = self.binance_component.get_price_for_binance_symbol(binance_order_symbol)
+        message = self.binance_component.format_price(binance_order_symbol, price)
+        print("Sending to Telegram...\n")
+        self.telegram_component.send_telegram_message(chat_id, message)
