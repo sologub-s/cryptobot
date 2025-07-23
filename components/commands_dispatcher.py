@@ -10,7 +10,7 @@ def dispatch(di: dict, args) -> None | tuple[None, type[ShowOrdersCommand]] | tu
             None,
             ShowOrdersCommand()
                 .set_payload(args.chat_id)
-                .set_deps(di['service_component'])
+                .set_deps(di['service_component'], di['view'])
         )
     elif args.command == "show_order_status":
         return (
@@ -21,7 +21,7 @@ def dispatch(di: dict, args) -> None | tuple[None, type[ShowOrdersCommand]] | tu
                     args.binance_symbol,
                     args.chat_id,
                 )
-                .set_deps(di['service_component'])
+                .set_deps(di['service_component'], di['view'])
         )
     elif args.command == "show_price":
         return (
@@ -31,7 +31,7 @@ def dispatch(di: dict, args) -> None | tuple[None, type[ShowOrdersCommand]] | tu
                     args.binance_symbol,
                     args.chat_id,
                 )
-                .set_deps(di['service_component'])
+                .set_deps(di['service_component'], di['view'])
         )
     elif args.command == "telegram_hook_listener":
         return (
@@ -47,13 +47,16 @@ def dispatch(di: dict, args) -> None | tuple[None, type[ShowOrdersCommand]] | tu
         return (
             None,
             HookCommand()
-                .set_deps(di['service_component'])
+                .set_deps(di['service_component'], di['view'])
         )
     elif args.command == "misc":
         return (
             None,
             MiscCommand()
-                .set_deps(di['service_component'])
+                .set_deps(
+                    service_component = di['service_component'],
+                    view = di['view'],
+                )
         )
 
     else:

@@ -34,20 +34,14 @@ class ServiceComponent:
     def telegram_component(self, telegram_component: TelegramComponent):
         self.__telegram_component = telegram_component
 
-    def show_orders(self, chat_id: int):
-        orders = self.binance_component.get_open_orders()
-        message = self.binance_component.format_open_orders(orders)
-        print("Sending to Telegram...\n")
-        self.telegram_component.send_telegram_message(chat_id, message)
+    def get_open_orders(self):
+        return self.binance_component.get_open_orders()
 
-    def show_order_status(self, binance_order_id: int, binance_order_symbol: str, chat_id: int):
-        order: dict = self.binance_component.get_order_by_binance_order_id(binance_order_id, binance_order_symbol)
-        message = self.binance_component.format_order(order)
-        print("Sending to Telegram...\n")
-        self.telegram_component.send_telegram_message(chat_id, message)
+    def get_order_by_binance_order_id_and_binance_symbol(self, binance_order_id: int, binance_order_symbol: str):
+        return self.binance_component.get_order_by_binance_order_id(binance_order_id, binance_order_symbol)
 
-    def show_price(self, binance_order_symbol: str, chat_id: int):
-        price: dict = self.binance_component.get_price_for_binance_symbol(binance_order_symbol)
-        message = self.binance_component.format_price(binance_order_symbol, price)
-        print("Sending to Telegram...\n")
+    def get_price_for_binance_symbol(self, binance_order_symbol: str) -> dict | dict:
+        return self.binance_component.get_price_for_binance_symbol(binance_order_symbol)
+
+    def send_telegram_message(self, chat_id: int, message: str):
         self.telegram_component.send_telegram_message(chat_id, message)

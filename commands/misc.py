@@ -11,20 +11,28 @@ import json
 
 from components import ServiceComponent
 from components import BinanceComponent
+from views.view import View
 
 
 class MiscCommand(AbstractCommand):
 
     def __init__(self):
         super().__init__()
+        self._view = None
         self._initialized = True
 
-    def set_deps(self, service_component: ServiceComponent):
+    def set_deps(self, service_component: ServiceComponent, view: View):
         self._service_component = service_component
+        self._view = view
         return self
 
     def execute(self):
-        print("OK, let's go...")
+        #print("OK, let's go...")
+        print(self._view.render('some.j2', {
+            'name': 'Serhii',
+        }))
+
+    def test_tlg(self):
         #tc = self._service_component.telegram_component
         bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"

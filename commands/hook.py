@@ -1,20 +1,23 @@
 import sys
 from logging import info, error
 
-from commands import AbstractCommand
+from commands import AbstractCommand, ShowOrderStatusCommand, ShowPriceCommand, ShowOrdersCommand
 import json
 
 from components import ServiceComponent
+from views.view import View
 
 
 class HookCommand(AbstractCommand):
 
     def __init__(self):
         super().__init__()
+        self._view = None
         self._initialized = True
 
-    def set_deps(self, service_component: ServiceComponent):
+    def set_deps(self, service_component: ServiceComponent, view: View):
         self._service_component = service_component
+        self._view = view
         return self
 
     def execute(self):
@@ -33,25 +36,31 @@ class HookCommand(AbstractCommand):
                 text = text.replace("/start", "", 1)
 
             if text.lower() == "show_orders":
-                self._service_component.show_orders(chat_id)
+                command = (ShowOrdersCommand()
+                           .set_payload(chat_id)
+                           .set_deps(self._service_component, self._view)
+                           )
+                command.execute()
 
             elif text.lower().startswith("show_order_status:"):
                 text = text.replace(" ", "")
                 binance_order_id = text.split(":")[1]
                 binance_symbol = text.split(":")[2].upper()
-                self._service_component.show_order_status(
-                    binance_order_id,
-                    binance_symbol,
-                    chat_id,
-                )
+
+                command = (ShowOrderStatusCommand()
+                           .set_payload(binance_order_id, binance_symbol, chat_id)
+                           .set_deps(self._service_component, self._view)
+                           )
+                command.execute()
 
             elif text.lower().startswith("show_price:"):
                 text = text.replace(" ", "")
                 binance_symbol = text.split(":")[1].upper()
-                self._service_component.show_price(
-                    binance_symbol,
-                    chat_id,
-                )
+                command = (ShowPriceCommand()
+                           .set_payload(binance_symbol, chat_id)
+                           .set_deps(self._service_component, self._view)
+                           )
+                command.execute()
 
             else:
                 self._service_component.telegram_component.send_telegram_message(chat_id, "Unknown command: " + text)

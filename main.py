@@ -1,8 +1,14 @@
 import argparse
+import os
+from datetime import datetime
+
+from jinja2 import Environment, FileSystemLoader
 
 from config import get_config
-
 from components import ServiceComponent, dispatch, parse_args
+from helpers import get_project_root
+from views.view import View
+from views import view_helper
 
 
 def main():
@@ -12,8 +18,19 @@ def main():
 
     args.command = args.command.lower()
 
+    environment = Environment(
+        loader = FileSystemLoader(
+            get_project_root() + os.sep + config["view"]["views_folder"]
+        )
+    )
+
+    environment.globals['format_timestamp'] = view_helper.format_timestamp
+
+    default_vars = {}
+
     di = { # fuck that Python...
         'config': config,
+        'view': View(environment, default_vars),
         'service_component': ServiceComponent.create(config),
     }
 

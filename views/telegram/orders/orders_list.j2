@@ -1,0 +1,11 @@
+{% if not orders %}
+    No orders
+{% else %}
+    <b>The list of orders (total: {{ orders | length }}):</b>
+    {% for order in orders %}
+{% include 'telegram/orders/order_item.j2' %}
+        {% if not loop.last %}
+---
+        {% endif %}
+    {% endfor %}
+{% endif %}

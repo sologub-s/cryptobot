@@ -1,0 +1,8 @@
+<code>{{ order.orderId }}</code>
+<b>{{ format_timestamp(order.updateTime / 1000, '%Y-%m-%d %H:%M:%S') }}</b>
+<b>Type: {{ order.type }}</b>
+Side: {{ order.side }}
+Symbol: {{ order.symbol }}
+Price: {{ order.price }}
+Origin qty: {{ order.origQty }}
+Status: {{ order.status }}
