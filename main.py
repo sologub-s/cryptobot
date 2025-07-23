@@ -1,6 +1,4 @@
-import argparse
 import os
-from datetime import datetime
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -24,7 +22,7 @@ def main():
         )
     )
 
-    environment.globals['format_timestamp'] = view_helper.format_timestamp
+    environment.globals.update(view_helper.get_globals())
 
     default_vars = {}
 
