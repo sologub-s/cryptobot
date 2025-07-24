@@ -66,6 +66,7 @@ def dispatch(di: dict, args) -> None | tuple[None, type[ShowOrdersCommand]] | tu
                     args.port,
                     args.chat_id,
                 )
+                .set_deps(di['service_component'])
         )
     elif args.command == "hook":
         return (
