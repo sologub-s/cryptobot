@@ -33,6 +33,7 @@ class ShowPriceChartOptionsCommand(AbstractCommand):
             f"show_price_chart:{self._payload["binance_symbol"]}:3_months_ago_UTC:1w",
             f"show_price_chart:{self._payload["binance_symbol"]}:1_months_ago_UTC:1d",
             f"show_price_chart:{self._payload["binance_symbol"]}:1_week_ago_UTC:1d",
+            f"show_price_chart:{self._payload["binance_symbol"]}:3_days_ago_UTC:1h",
             f"show_price_chart:{self._payload["binance_symbol"]}:1_day_ago_UTC:1h",
         ]
         inline_keyboard: list = []
