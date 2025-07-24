@@ -1,6 +1,7 @@
 import json
 from datetime import datetime
 
+from binance import KLINE_INTERVAL_1DAY
 from binance.client import Client
 
 class BinanceComponent:
@@ -50,4 +51,17 @@ class BinanceComponent:
             return price
         except Exception as e:
             print(f"ERROR: cannot get the price for binance_order_symbol: {binance_order_symbol}", e)
+            return {}
+
+    def get_historical_klines(self, binance_order_symbol: str, period: str, interval: str = KLINE_INTERVAL_1DAY) -> list:
+        try:
+            klines: dict = self.binance_client.get_historical_klines(
+                symbol = binance_order_symbol,
+                start_str = period,
+                interval = interval,
+            )
+            print(json.dumps(klines, indent=4))
+            return klines
+        except Exception as e:
+            print(f"ERROR: cannot get the klines for binance_order_symbol: {binance_order_symbol} and period: {period}", e)
             return {}

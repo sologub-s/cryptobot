@@ -8,6 +8,10 @@ from helpers import get_project_root
 from views.view import View
 from views import view_helper
 
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
+
 
 def main():
     config: dict = get_config()
@@ -29,6 +33,7 @@ def main():
     di = { # fuck that Python...
         'config': config,
         'view': View(environment, default_vars),
+        'plt': plt,
         'service_component': ServiceComponent.create(config),
     }
 

@@ -2,6 +2,8 @@ from .abstract import AbstractCommand
 from .show_orders import ShowOrdersCommand
 from .show_order_status import ShowOrderStatusCommand
 from .show_price import ShowPriceCommand
+from .show_price_chart_options import ShowPriceChartOptionsCommand
+from .show_price_chart import ShowPriceChartCommand
 from .telegram_hook_listener import TelegramHookListenerCommand
 from .hook import HookCommand
 from .misc import MiscCommand
@@ -11,6 +13,8 @@ __all__ = [
     "ShowOrdersCommand",
     "ShowOrderStatusCommand",
     "ShowPriceCommand",
+    "ShowPriceChartOptionsCommand",
+    "ShowPriceChartCommand",
     "TelegramHookListenerCommand",
     "HookCommand",
     "MiscCommand",

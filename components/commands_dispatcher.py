@@ -1,7 +1,9 @@
 import argparse
 
 from commands import ShowOrdersCommand, TelegramHookListenerCommand, HookCommand
-from commands import ShowOrderStatusCommand, ShowPriceCommand, MiscCommand
+from commands import ShowOrderStatusCommand, ShowPriceCommand
+from commands import ShowPriceChartOptionsCommand, ShowPriceChartCommand
+from commands import MiscCommand
 
 def dispatch(di: dict, args) -> None | tuple[None, type[ShowOrdersCommand]] | tuple[str, None]:
 
@@ -33,6 +35,28 @@ def dispatch(di: dict, args) -> None | tuple[None, type[ShowOrdersCommand]] | tu
                 )
                 .set_deps(di['service_component'], di['view'])
         )
+    elif args.command == "show_price_chart_options":
+        return (
+            None,
+            ShowPriceChartOptionsCommand()
+                .set_payload(
+                    args.binance_symbol,
+                    args.chat_id,
+                )
+                .set_deps(di['service_component'], di['view'])
+        )
+    elif args.command == "show_price_chart":
+        return (
+            None,
+            ShowPriceChartCommand()
+                .set_payload(
+                    args.binance_symbol,
+                    args.period.replace('_', ' '),
+                    args.interval,
+                    args.chat_id,
+                )
+                .set_deps(di['service_component'], di['view'], di['plt'])
+        )
     elif args.command == "telegram_hook_listener":
         return (
             None,
@@ -47,7 +71,7 @@ def dispatch(di: dict, args) -> None | tuple[None, type[ShowOrdersCommand]] | tu
         return (
             None,
             HookCommand()
-                .set_deps(di['service_component'], di['view'])
+                .set_deps(di['service_component'], di['view'], di['plt'])
         )
     elif args.command == "misc":
         return (
@@ -84,6 +108,18 @@ def parse_args(cli_name: str):
     parser_price = subparsers.add_parser("show_price", help="Show symbol price")
     parser_price.add_argument("--binance_symbol", default="ETHUSDT", help="Trading pair (symbol)")
     parser_price.add_argument("--chat_id", type=int, help="Telegram chat id")
+
+    # show_price_chart_options
+    parser_price_chart_options = subparsers.add_parser("show_price_chart_options", help="Show options for price chart")
+    parser_price_chart_options.add_argument("--binance_symbol", default="ETHUSDT", help="Trading pair (symbol)")
+    parser_price_chart_options.add_argument("--chat_id", type=int, help="Telegram chat id")
+
+    # show_price_chart
+    parser_price_chart = subparsers.add_parser("show_price_chart", help="Show symbol price chart for period")
+    parser_price_chart.add_argument("--binance_symbol", default="ETHUSDT", help="Trading pair (symbol)")
+    parser_price_chart.add_argument("--period", default="1 week ago", help="Period to show")
+    parser_price_chart.add_argument("--interval", default="1d", help="Interval for resolution")
+    parser_price_chart.add_argument("--chat_id", type=int, help="Telegram chat id")
 
     # telegram_hook
     parser_telegram_hook = subparsers.add_parser("telegram_hook_listener", help="Wait for Telegram hooks")

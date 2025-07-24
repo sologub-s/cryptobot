@@ -1,4 +1,6 @@
 import json
+from io import BytesIO
+from helpers import slugify
 
 import requests
 
@@ -19,23 +21,54 @@ class TelegramComponent:
     def bot_token(self, bot_token: str):
         self.__bot_token = bot_token
 
-    def send_telegram_message(self, chat_id: int, text: str, parse_mode="HTML"):
-        url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
-        data = {
-            "chat_id": chat_id,
-            "text": text,
-            "parse_mode": parse_mode,
-            "reply_markup": json.dumps({
+    def get_reply_markup(self):
+        return\
+            {
                 "keyboard": [
                     #["show_orders", "status"],
                     ["show_orders",],
                     ["show_price:ETHUSDT",],
+                    ["show_price_chart_options:ETHUSDT",],
                 ],
                 "resize_keyboard": True,
                 "one_time_keyboard": False
-            }),
+            }
+
+    def send_telegram_message(self, chat_id: int, text: str, inline_keyboard: list = [], parse_mode="HTML"):
+        url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
+        reply_markup = self.get_reply_markup()
+        if inline_keyboard:
+            del reply_markup["keyboard"]
+            reply_markup['inline_keyboard'] = inline_keyboard
+
+        print(json.dumps(reply_markup, indent=4))
+
+        data = {
+            "chat_id": chat_id,
+            "text": text,
+            "parse_mode": parse_mode,
+            "reply_markup": json.dumps(reply_markup),
         }
+
         response = requests.post(url, data = data)
+        #print(f"Telegram response: {response.status_code}, {response.text}")
+        if not response.ok:
+            print("ERROR: Cannot send message to Telegram:", response.text)
+
+    def send_telegram_photo(self, chat_id: int, photo_buf: BytesIO, photo_name: str = None, parse_mode = "HTML"):
+        url = f"https://api.telegram.org/bot{self.bot_token}/sendPhoto"
+        reply_markup = self.get_reply_markup()
+        #if inline_keyboard:
+            #reply_markup['inline_keyboard'] = inline_keyboard
+        files = {"photo": photo_buf}
+        if photo_name:
+           files = {"photo": (slugify(photo_name) + ".png", photo_buf, "image/png")}
+        data = {
+            "chat_id": chat_id,
+            "caption": photo_name,
+            "reply_markup": json.dumps(reply_markup),
+        }
+        response = requests.post(url, data=data, files=files)
         #print(f"Telegram response: {response.status_code}, {response.text}")
         if not response.ok:
             print("ERROR: Cannot send message to Telegram:", response.text)

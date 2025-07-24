@@ -1,10 +1,9 @@
 import os
-import sys
-from logging import info, error
-from pprint import pprint
+import matplotlib
+matplotlib.use('Agg')
+import matplotlib.pyplot as plt
 
 import requests
-from flask import jsonify
 
 from commands import AbstractCommand
 import json
@@ -27,6 +26,20 @@ class MiscCommand(AbstractCommand):
         return self
 
     def execute(self):
+        #print("OK, let's go...")
+
+
+        x = [1, 2, 3, 4, 5]
+        y = [10, 20, 15, 30, 25]
+
+        plt.plot(x, y, label="Price")
+        plt.axhline(y=22, color="red", linestyle="--", label="Order Level")
+        plt.legend()
+        plt.title("ETH/USDT - Week Chart")
+        plt.savefig("chart.png")  # Зберегти картинку
+        plt.close()
+
+    def test_view(self):
         #print("OK, let's go...")
         print(self._view.render('some.j2', {
             'name': 'Serhii',

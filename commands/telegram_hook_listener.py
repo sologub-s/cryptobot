@@ -26,12 +26,10 @@ class TelegramHookListenerCommand(AbstractCommand):
         @app.route("/telegram/cryptobot", methods=["POST"])
         def telegram_hook():
             data = request.get_json(force=True, silent=True) or {}
-            if "message" not in data:
-                error(f"No 'message' field, data: {type(data)} : {data}")
+            if "message" not in data and "callback_query" not in data:
+                error(f"No 'message' or 'callback_query' field, data: {type(data)} : {json.dumps(data)}")
                 return jsonify({"status": "error", "error": str("No 'message' field")}), 200
-            if self._payload["chat_id"] != data["message"]["chat"]["id"]:
-                error(f"Payload chat_id: '{self._payload["chat_id"]}', data_message_chat_id: { data["message"]["chat"]["id"]}")
-                return jsonify({"status": "error", "error": str("Forbidden chat_id")}), 403
+
 
             try:
                 result = subprocess.run(
