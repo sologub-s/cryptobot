@@ -1,3 +1,4 @@
+import asyncio
 import os
 import matplotlib
 matplotlib.use('Agg')
@@ -12,6 +13,8 @@ from components import ServiceComponent
 from components import BinanceComponent
 from views.view import View
 
+from binance import AsyncClient, BinanceSocketManager, ThreadedWebsocketManager
+
 
 class MiscCommand(AbstractCommand):
 
@@ -25,10 +28,35 @@ class MiscCommand(AbstractCommand):
         self._view = view
         return self
 
+
+
     def execute(self):
-        #print("OK, let's go...")
+        bc = self._service_component.binance_component.binance_client
 
+        all_orders = bc.get_all_orders(symbol = 'ETHUSDT')
+        print(json.dumps(all_orders, indent = 4))
 
+        return True
+
+    async def s(self):
+        client = await AsyncClient.create()
+        bm = BinanceSocketManager(client)
+        # start any sockets here, i.e a trade socket
+        ts = bm.trade_socket('BNBBTC')
+        # then start receiving messages
+        async with ts as tscm:
+            while True:
+                res = await tscm.recv()
+                print(res)
+
+        await client.close_connection()
+
+    def test_websocket(self):
+        loop = asyncio.get_event_loop()
+        loop.run_until_complete(self.s())
+        return
+
+    def test_plt(self):
         x = [1, 2, 3, 4, 5]
         y = [10, 20, 15, 30, 25]
 
