@@ -1,6 +1,6 @@
 import argparse
 
-from commands import ShowOrdersCommand, TelegramHookListenerCommand, HookCommand
+from commands import ShowOrdersCommand, WebserverCommand, HookCommand
 from commands import ShowOrderStatusCommand, ShowPriceCommand
 from commands import ShowPriceChartOptionsCommand, ShowPriceChartCommand
 from commands import MiscCommand
@@ -57,10 +57,10 @@ def dispatch(di: dict, args) -> None | tuple[None, type[ShowOrdersCommand]] | tu
                 )
                 .set_deps(di['service_component'], di['view'], di['plt'])
         )
-    elif args.command == "telegram_hook_listener":
+    elif args.command == "webserver":
         return (
             None,
-            TelegramHookListenerCommand()
+            WebserverCommand()
                 .set_payload(
                     args.host,
                     args.port,
@@ -123,7 +123,7 @@ def parse_args(cli_name: str):
     parser_price_chart.add_argument("--chat_id", type=int, help="Telegram chat id")
 
     # telegram_hook
-    parser_telegram_hook = subparsers.add_parser("telegram_hook_listener", help="Wait for Telegram hooks")
+    parser_telegram_hook = subparsers.add_parser("webserver", help="Wait for Telegram hooks")
     parser_telegram_hook.add_argument("--host", type=str, default="0.0.0.0", help="Host to listen to")
     parser_telegram_hook.add_argument("--port", type=int, default=8765, help="Port to listen to")
     parser_telegram_hook.add_argument("--chat_id", type=int, help="Telegram chat id")

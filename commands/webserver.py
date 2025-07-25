@@ -9,7 +9,7 @@ from flask import Flask, request, jsonify
 from components import ServiceComponent
 
 
-class TelegramHookListenerCommand(AbstractCommand):
+class WebserverCommand(AbstractCommand):
 
     def set_payload(self, host: str, port: int, chat_id: int):
         self._payload["host"] = host

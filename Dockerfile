@@ -5,4 +5,4 @@ COPY . .
 
 RUN pip install --no-cache-dir -r requirements.txt
 
-CMD python main.py telegram_hook_listener --chat_id=$TELEGRAM_CHAT_ID
+CMD python main.py webserver --chat_id=$TELEGRAM_CHAT_ID
