@@ -86,7 +86,7 @@ class ShowPriceChartCommand(AbstractCommand):
 
         for order in orders:
             self._plt.axhline(y = round(float(order['price']), 2), color = "green", linestyle = "--")
-            self._plt.text(dates[0], round(float(order['price']), 2), round(float(order['price']), 2), va = 'bottom', color="green")
+            self._plt.text(dates[0], round(float(order['price']), 2), f"{round(float(order['price']), 2)} ({order['side'].lower()} {round(float(order['origQty']), 4)}, order amount: {round(float(order['price'])  * float(order['origQty']), 2)})", va = 'bottom', color="green")
 
         title: str = f"{self._payload["binance_symbol"]} - Price History (since {self._payload["period"]}, interval {self._payload["interval"]})"
         self._plt.title(title)
