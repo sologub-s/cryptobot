@@ -3,6 +3,6 @@
 <b>Type: {{ order.type }}</b>
 Side: {{ order.side }}
 Symbol: {{ order.symbol }}
-Price: {{ order.price }}
+Price: {{ "%.2f" | format(order.price | float) }}
 Origin qty: {{ order.origQty }}
 Status: {{ order.status }}
