@@ -5,4 +5,4 @@ telegram hook listener:
 python main.py webserver --chat_id=$TELEGRAM_CHAT_ID
 
 docker:
-docker build -t cryptobot . && docker run --env-file .env -d --name cryptobot -p 8765:8765 --restart unless-stopped cryptobot
+docker build -t cryptobot . && docker run --env-file .env -d --name cryptobot --network=web -p 8765:8765 --restart unless-stopped cryptobot

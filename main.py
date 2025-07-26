@@ -1,4 +1,5 @@
 import os
+from calendar import error
 
 from jinja2 import Environment, FileSystemLoader
 
@@ -11,6 +12,9 @@ from views import view_helper
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
+
+from peewee import MySQLDatabase
+from models import database_proxy
 
 
 def main():
@@ -30,10 +34,22 @@ def main():
 
     default_vars = {}
 
+    db = MySQLDatabase(
+        config["db"]["name"], # database name
+        user = config["db"]["user"], # database username
+        password = config["db"]["pass"], # database password
+        host = config["db"]["host"],  # database host
+        port = config["db"]["port"]  # database port
+    )
+    database_proxy.initialize(db)
+    if not db.connect():
+        print(f'ERROR: Cannot connect to database {config["db"]["host"]}')
+
     di = { # fuck that Python...
         'config': config,
         'view': View(environment, default_vars),
         'plt': plt,
+        'db': db,
         'service_component': ServiceComponent.create(config),
     }
 

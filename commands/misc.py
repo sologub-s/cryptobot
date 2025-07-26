@@ -1,6 +1,9 @@
 import asyncio
 import os
 import matplotlib
+
+from models import Order
+
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
@@ -28,13 +31,19 @@ class MiscCommand(AbstractCommand):
         self._view = view
         return self
 
-
-
     def execute(self):
         bc = self._service_component.binance_component.binance_client
 
         all_orders = bc.get_all_orders(symbol = 'ETHUSDT')
-        print(json.dumps(all_orders, indent = 4))
+        #print(json.dumps(all_orders, indent = 4))
+
+        for binance_order in all_orders:
+            order = Order().fill_from_binance(binance_order)
+            print(order.as_dict())
+            print(order.upsert())
+            print(order.as_dict())
+            print('-----------------------')
+
 
         return True
 

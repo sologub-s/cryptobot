@@ -1,5 +1,6 @@
 from commands import AbstractCommand
 from components import ServiceComponent
+from models import Order
 from views.view import View
 
 
@@ -25,12 +26,13 @@ class ShowOrderStatusCommand(AbstractCommand):
         if not self._initialized:
             print(f"ERROR: Command {self.__class__.__name__} is NOT initialized")
             return False
-        order = self._service_component.get_order_by_binance_order_id_and_binance_symbol(
+        binance_order = self._service_component.get_order_by_binance_order_id_and_binance_symbol(
             self._payload["binance_order_id"],
             self._payload["binance_symbol"],
         )
+        self._service_component.check_if_order_status_changed_and_upsert(binance_order, self._payload["chat_id"])
         message = self._view.render('telegram/orders/order_item.j2', {
-            'order': order,
+            'order': binance_order,
         })
         self._service_component.send_telegram_message(self._payload["chat_id"], message)
         return True

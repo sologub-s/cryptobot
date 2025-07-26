@@ -22,5 +22,12 @@ def get_config() -> dict:
         },
         "view": {
             "views_folder": "../views"
+        },
+        "db": {
+            "host": os.getenv("DATABASE_HOST", ""),
+            "port": int(os.getenv("DATABASE_PORT", "")),
+            "name": os.getenv("DATABASE_NAME", ""),
+            "user": os.getenv("DATABASE_USER", ""),
+            "pass": os.getenv("DATABASE_PASS", ""),
         }
     }
