@@ -32,6 +32,9 @@ class MiscCommand(AbstractCommand):
         return self
 
     def execute(self):
+        print('Misc...')
+
+    def test_upsert(self):
         bc = self._service_component.binance_component.binance_client
 
         all_orders = bc.get_all_orders(symbol = 'ETHUSDT')

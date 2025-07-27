@@ -43,5 +43,5 @@ class ShowPriceChartOptionsCommand(AbstractCommand):
             inline_keyboard.append([{"text": key, "callback_data": key},])
 
         self._service_component.send_telegram_message(self._payload["chat_id"], message, inline_keyboard)
-        self._service_component.send_telegram_message(self._payload["chat_id"], self._view.render('telegram/price_chart_options_choose_another.j2', {}))
+        self._service_component.send_telegram_message(self._payload["chat_id"], self._view.render('telegram/or_choose_another_option.j2', {}))
         return True

@@ -26,9 +26,6 @@ class ShowOrdersCommand(AbstractCommand):
             print(f"ERROR: Command {self.__class__.__name__} is NOT initialized")
             return False
         binance_orders = self._service_component.get_open_orders()
-        for binance_order in binance_orders:
-            self._service_component.check_if_order_status_changed_and_upsert(binance_order, self._payload["chat_id"])
-
         message = self._view.render('telegram/orders/orders_list.j2', {
             'orders': binance_orders,
         })

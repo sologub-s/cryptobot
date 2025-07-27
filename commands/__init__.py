@@ -6,6 +6,7 @@ from .show_price_chart_options import ShowPriceChartOptionsCommand
 from .show_price_chart import ShowPriceChartCommand
 from .webserver import WebserverCommand
 from .hook import HookCommand
+from .cron import CronCommand
 from .misc import MiscCommand
 
 __all__ = [
@@ -17,5 +18,6 @@ __all__ = [
     "ShowPriceChartCommand",
     "WebserverCommand",
     "HookCommand",
+    "CronCommand",
     "MiscCommand",
 ]

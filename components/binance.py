@@ -1,5 +1,4 @@
 import json
-from datetime import datetime
 
 from binance import KLINE_INTERVAL_1DAY
 from binance.client import Client
@@ -24,6 +23,15 @@ class BinanceComponent:
     def get_open_orders(self):
         try:
             orders: dict = self.binance_client.get_open_orders()
+            """print(json.dumps(orders, indent=4))"""
+            return orders
+        except Exception as e:
+            print("ERROR: cannot get the list of orders:", e)
+            return {}
+
+    def get_all_orders(self, symbol: str):
+        try:
+            orders: dict = self.binance_client.get_all_orders(symbol=symbol)
             """print(json.dumps(orders, indent=4))"""
             return orders
         except Exception as e:

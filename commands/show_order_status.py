@@ -30,7 +30,6 @@ class ShowOrderStatusCommand(AbstractCommand):
             self._payload["binance_order_id"],
             self._payload["binance_symbol"],
         )
-        self._service_component.check_if_order_status_changed_and_upsert(binance_order, self._payload["chat_id"])
         message = self._view.render('telegram/orders/order_item.j2', {
             'order': binance_order,
         })

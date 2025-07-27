@@ -3,6 +3,7 @@ import argparse
 from commands import ShowOrdersCommand, WebserverCommand, HookCommand
 from commands import ShowOrderStatusCommand, ShowPriceCommand
 from commands import ShowPriceChartOptionsCommand, ShowPriceChartCommand
+from commands import CronCommand
 from commands import MiscCommand
 
 def dispatch(di: dict, args) -> None | tuple[None, type[ShowOrdersCommand]] | tuple[str, None]:
@@ -74,6 +75,15 @@ def dispatch(di: dict, args) -> None | tuple[None, type[ShowOrdersCommand]] | tu
             HookCommand()
                 .set_deps(di['service_component'], di['view'], di['plt'])
         )
+    elif args.command == "cron":
+        return (
+            None,
+            CronCommand()
+                .set_payload(
+                    args.chat_id,
+                )
+                .set_deps(di['service_component'], di['view'])
+        )
     elif args.command == "misc":
         return (
             None,
@@ -129,6 +139,9 @@ def parse_args(cli_name: str):
     parser_telegram_hook.add_argument("--chat_id", type=int, help="Telegram chat id")
 
     subparsers.add_parser("hook", help="Dispatch & execute hook")
+
+    parser_cron = subparsers.add_parser("cron", help="Run cron tasks")
+    parser_cron.add_argument("--chat_id", type=int, help="Telegram chat id")
 
     subparsers.add_parser("misc", help="Some misc checks etc.")
 

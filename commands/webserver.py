@@ -62,5 +62,24 @@ class WebserverCommand(AbstractCommand):
             except Exception as e:
                 return jsonify({"status": "error", "error": str(e)}), 500
 
+        @app.route("/cron", methods=["GET"])
+        def cron_hook():
+            #data = request.get_json(force=True, silent=True) or {}
+
+            try:
+                result = subprocess.run(
+                    ["python", "main.py", "cron", f"--chat_id={self._payload['chat_id']}"],
+                    #input=json.dumps(data),
+                    text=True,
+                    #capture_output=True,
+                    stdout=sys.stdout,
+                    stderr=sys.stderr
+                )
+
+                info(f" result: {type(result)} : {result}")
+                return jsonify({"status": "ok", "output": result.stdout})
+            except Exception as e:
+                return jsonify({"status": "error", "error": str(e)}), 500
+
         app.run(host = self._payload["host"], port = self._payload["port"])
         return True

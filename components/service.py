@@ -41,6 +41,9 @@ class ServiceComponent:
     def get_open_orders(self):
         return self.binance_component.get_open_orders()
 
+    def get_all_orders(self, symbol: str):
+        return self.binance_component.get_all_orders(symbol)
+
     def get_order_by_binance_order_id_and_binance_symbol(self, binance_order_id: int, binance_order_symbol: str):
         return self.binance_component.get_order_by_binance_order_id(binance_order_id, binance_order_symbol)
 
@@ -73,15 +76,3 @@ class ServiceComponent:
 
     def send_telegram_photo(self, chat_id: int, photo_buf: BytesIO, photo_name: str = 'image'):
         self.telegram_component.send_telegram_photo(chat_id, photo_buf, photo_name)
-
-    def check_if_order_status_changed_and_upsert(self, binance_order: dict, chat_id: int):
-        old_order = Order.select().where(Order.binance_order_id == binance_order['orderId']).first()
-        print(f"old_order: {old_order}")
-        if not old_order:
-            old_order = Order().fill_from_binance(binance_order)
-            old_order.upsert()
-        if OrderMapper.map_status(binance_order['status']) != old_order.status:
-            old_order.status = OrderMapper.map_status(binance_order['status'])
-            old_order.save()
-            m: str = f"Order #{binance_order['orderId']} status changed to: {binance_order['status']}"
-            self.send_telegram_message(chat_id, m)

@@ -30,6 +30,19 @@ class OrderMapper:
     TYPE_TAKE_PROFIT_LIMIT = 6
     TYPE_LIMIT_MAKER = 7
 
+    status_mapping = {
+            "UNKNOWN": STATUS_UNKNOWN,
+            "NEW": STATUS_NEW,
+            "PENDING_NEW": STATUS_PENDING_NEW,
+            "PARTIALLY_FILLED": STATUS_PARTIALLY_FILLED,
+            "FILLED": STATUS_FILLED,
+            "CANCELED": STATUS_CANCELED,
+            "PENDING_CANCEL": STATUS_PENDING_CANCEL,
+            "REJECTED": STATUS_REJECTED,
+            "EXPIRED": STATUS_EXPIRED,
+            "EXPIRED_IN_MATCH": STATUS_EXPIRED_IN_MATCH,
+        }
+
     @classmethod
     def map_symbol(cls, symbol: str) -> int:
         if not symbol:
@@ -55,18 +68,7 @@ class OrderMapper:
         if not status:
             return cls.STATUS_UNKNOWN
         status = status.upper()
-        mapping = {
-            "NEW": cls.STATUS_NEW,
-            "PENDING_NEW": cls.STATUS_PENDING_NEW,
-            "PARTIALLY_FILLED": cls.STATUS_PARTIALLY_FILLED,
-            "FILLED": cls.STATUS_FILLED,
-            "CANCELED": cls.STATUS_CANCELED,
-            "PENDING_CANCEL": cls.STATUS_PENDING_CANCEL,
-            "REJECTED": cls.STATUS_REJECTED,
-            "EXPIRED": cls.STATUS_EXPIRED,
-            "EXPIRED_IN_MATCH": cls.STATUS_EXPIRED_IN_MATCH,
-        }
-        return mapping.get(status, cls.STATUS_UNKNOWN)
+        return cls.status_mapping.get(status, cls.STATUS_UNKNOWN)
 
     @classmethod
     def map_type(cls, type: str) -> int:
