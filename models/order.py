@@ -27,6 +27,7 @@ class Order(BaseModel):
     order_price = DecimalField(max_digits=10, decimal_places=2, auto_round=True)
     original_quantity = DecimalField(max_digits=20, decimal_places=10, auto_round=True)
     status = SmallIntegerField(default=OrderMapper.STATUS_UNKNOWN)
+    created_by_bot = SmallIntegerField(default=0)
 
     class Meta:
         table_name = 'orders'
@@ -98,7 +99,6 @@ class Order(BaseModel):
         if row_id != 0:
             self.id = row_id
         elif self.id is None:
-            # Знаходимо існуючий ID
             existing = Order.get(Order.binance_order_id == self.binance_order_id)
             self.id = existing.id
 
@@ -123,6 +123,7 @@ class Order(BaseModel):
             "order_price": float(self.order_price) if self.order_price else None,
             "original_quantity": float(self.original_quantity) if self.original_quantity else None,
             "status": self.status,
+            "created_by_bot": bool(self.created_by_bot),
         }
 
     # --- from binance ---
