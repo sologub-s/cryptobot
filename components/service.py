@@ -69,10 +69,10 @@ class ServiceComponent:
     def get_historical_klines(self, binance_order_symbol: str, period: str, interval: str) -> list:
         return self.binance_component.get_historical_klines(binance_order_symbol, period, interval)
 
-    def send_telegram_message(self, chat_id: int, message: str, inline_keyboard=None):
+    def send_telegram_message(self, chat_id: int, message: str, inline_keyboard=None, disable_notification=False):
         if inline_keyboard is None:
             inline_keyboard = []
-        self.telegram_component.send_telegram_message(chat_id, message, inline_keyboard)
+        self.telegram_component.send_telegram_message(chat_id, message, inline_keyboard, disable_notification)
 
     def send_telegram_photo(self, chat_id: int, photo_buf: BytesIO, photo_name: str = 'image'):
         self.telegram_component.send_telegram_photo(chat_id, photo_buf, photo_name)

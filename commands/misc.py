@@ -2,7 +2,8 @@ import asyncio
 import os
 import matplotlib
 
-from models import Order
+from helpers import current_millis
+from models import Order, CronJob
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -33,6 +34,33 @@ class MiscCommand(AbstractCommand):
 
     def execute(self):
         print('Misc...')
+        return True
+
+    def test_cron_jobs_insert(self):
+
+        # SELECT * FROM cron_jobs WHERE (last_executed_at IS NULL) OR (last_executed_at + execution_interval_seconds * 1000 <= UNIX_TIMESTAMP(NOW(3)) * 1000) ;
+        cron_jobs_list: list = [
+            {
+                'name': 'check-all-orders-from-binance',
+                'execution_interval_seconds': 60,
+            },
+
+            {
+                'name': 'notify-working',
+                'execution_interval_seconds': 14400,
+            },
+            {
+                'name': 'check-balance-from-binance',
+                'execution_interval_seconds': 180,
+            },
+        ]
+
+        for cron_job_dict in cron_jobs_list:
+            cron_job = CronJob().fill(cron_job_dict)
+            if not cron_job.validate():
+                print(f'CronJob validation failed: {cron_job.get_validation_errors()}')
+            else:
+                print(f'Save {cron_job.name}: {cron_job.save()}')
 
     def test_upsert(self):
         bc = self._service_component.binance_component.binance_client

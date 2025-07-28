@@ -34,7 +34,7 @@ class TelegramComponent:
                 "one_time_keyboard": False
             }
 
-    def send_telegram_message(self, chat_id: int, text: str, inline_keyboard: list = [], parse_mode="HTML"):
+    def send_telegram_message(self, chat_id: int, text: str, inline_keyboard: list = [], disable_notification=False, parse_mode="HTML"):
         url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"
         reply_markup = self.get_reply_markup()
         if inline_keyboard:
@@ -46,6 +46,7 @@ class TelegramComponent:
         data = {
             "chat_id": chat_id,
             "text": text,
+            "disable_notification": disable_notification,
             "parse_mode": parse_mode,
             "reply_markup": json.dumps(reply_markup),
         }

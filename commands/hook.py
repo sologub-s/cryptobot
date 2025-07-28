@@ -94,7 +94,7 @@ class HookCommand(AbstractCommand):
                 command.execute()
 
             else:
-                self._service_component.telegram_component.send_telegram_message(chat_id, "Unknown command: " + text)
+                self._service_component.send_telegram_message(chat_id, "Unknown command: " + text)
         except json.JSONDecodeError:
             print("Invalid JSON input")
             return False
