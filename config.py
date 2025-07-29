@@ -11,6 +11,7 @@ def get_config() -> dict:
     return {
         "binance": {
             "api": {
+                "base_url": os.getenv("BINANCE_API_BASE_URL", ""),
                 "key": os.getenv("BINANCE_API_KEY", ""),
                 "secret": os.getenv("BINANCE_API_SECRET", ""),
             },

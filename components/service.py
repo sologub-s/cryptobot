@@ -1,7 +1,6 @@
 from io import BytesIO
 
-from mappers.order_mapper import OrderMapper
-from models import Order
+from .binance_raw_client import BinanceRawClientComponent
 from .binance import BinanceComponent
 from .telegram import TelegramComponent
 
@@ -9,34 +8,21 @@ class ServiceComponent:
     def __init__(
             self,
             binance_component: BinanceComponent,
+            binance_raw_client_component: BinanceRawClientComponent,
             telegram_component: TelegramComponent,
     ):
         super().__init__()
         self.binance_component = binance_component
+        self.binance_raw_client_component = binance_raw_client_component
         self.telegram_component = telegram_component
 
     @classmethod
     def create(cls, config: dict):
         return cls(
-            BinanceComponent.create(config["binance"]),
-            TelegramComponent.create(config["telegram"]),
+            binance_component=BinanceComponent.create(config["binance"]),
+            binance_raw_client_component=BinanceRawClientComponent.create(config["binance"]),
+            telegram_component=TelegramComponent.create(config["telegram"]),
         )
-
-    @property
-    def binance_component(self):
-        return self.__binance_component
-
-    @binance_component.setter
-    def binance_component(self, binance_component: BinanceComponent):
-        self.__binance_component = binance_component
-
-    @property
-    def telegram_component(self):
-        return self.__telegram_component
-
-    @telegram_component.setter
-    def telegram_component(self, telegram_component: TelegramComponent):
-        self.__telegram_component = telegram_component
 
     def get_open_orders(self):
         return self.binance_component.get_open_orders()
@@ -76,3 +62,12 @@ class ServiceComponent:
 
     def send_telegram_photo(self, chat_id: int, photo_buf: BytesIO, photo_name: str = 'image'):
         self.telegram_component.send_telegram_photo(chat_id, photo_buf, photo_name)
+
+    def get_asset_transfer(self, type: str, start_time=None, end_time=None, limit=100):
+        return self.binance_raw_client_component.get_asset_transfer(type=type, start_time=start_time, end_time=end_time, limit=limit)
+
+    def get_asset_ledger(self, asset=None, start_time=None, end_time=None, limit=100):
+        return self.binance_raw_client_component.get_asset_ledger(asset=asset, start_time=start_time, end_time=end_time, limit=limit)
+
+    def get_asset_balance(self, asset=None):
+        return self.binance_component.get_asset_balance(asset)

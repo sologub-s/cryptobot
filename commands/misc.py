@@ -1,5 +1,7 @@
 import asyncio
 import os
+import time
+
 import matplotlib
 
 from helpers import current_millis
@@ -34,6 +36,38 @@ class MiscCommand(AbstractCommand):
 
     def execute(self):
         print('Misc...')
+
+        balance = self._service_component.get_asset_balance('USDT')
+        print('Balance:', balance)
+
+        return True
+
+    def test_asset_ledgers(self):
+
+        ledgers = self._service_component.get_asset_ledger(
+            start_time=int(time.time()*1000) - 30*24*60*60*1000,
+            end_time=int(time.time()*1000),
+        )
+        print(f'Ledgers: {ledgers}')
+
+        return True
+
+    def test_asset_transfer(self):
+        types = [
+            'MAIN_UMFUTURE',
+            'UMFUTURE_MAIN',
+            'MAIN_CMFUTURE',
+            'CMFUTURE_MAIN',
+            'MAIN_MARGIN',
+            'MARGIN_MAIN',
+            'MAIN_MINING',
+            'MINING_MAIN',
+            'MAIN_FUNDING',
+            'FUNDING_MAIN',
+        ]
+        for type in types:
+            transfers = self._service_component.get_asset_transfer(type)
+            print(f'Internal transfers of type {type}: {transfers}')
         return True
 
     def test_cron_jobs_insert(self):

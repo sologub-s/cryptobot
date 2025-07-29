@@ -44,7 +44,7 @@ class BinanceComponent:
                 orderId = binance_order_id,
                 symbol = binance_order_symbol,
             )
-            print(json.dumps(order, indent=4))
+            #print(json.dumps(order, indent=4))
             return order
         except Exception as e:
             print(f"ERROR: cannot get the order with binance_order_id: {binance_order_id}", e)
@@ -55,7 +55,7 @@ class BinanceComponent:
             price: dict = self.binance_client.get_avg_price(
                 symbol = binance_order_symbol,
             )
-            print(json.dumps(price, indent=4))
+            #print(json.dumps(price, indent=4))
             return price
         except Exception as e:
             print(f"ERROR: cannot get the price for binance_order_symbol: {binance_order_symbol}", e)
@@ -68,8 +68,20 @@ class BinanceComponent:
                 start_str = period,
                 interval = interval,
             )
-            print(json.dumps(klines, indent=4))
+            #print(json.dumps(klines, indent=4))
             return klines
         except Exception as e:
             print(f"ERROR: cannot get the klines for binance_order_symbol: {binance_order_symbol} and period: {period}", e)
+            return {}
+
+    def get_asset_balance(self, asset=None):
+        try:
+
+            balance: dict = self.binance_client.get_asset_balance(
+                asset = asset,
+            )
+            #print(json.dumps(balance, indent=4))
+            return balance
+        except Exception as e:
+            print(f"ERROR: cannot get the asset balance for asset: {asset}", e)
             return {}
