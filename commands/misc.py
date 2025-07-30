@@ -1,11 +1,14 @@
 import asyncio
 import os
 import time
+from decimal import Decimal
+from logging import info, error
 
 import matplotlib
 
 from helpers import current_millis
-from models import Order, CronJob
+from mappers.balance_mapper import BalanceMapper
+from models import Order, CronJob, Balance
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
@@ -36,10 +39,43 @@ class MiscCommand(AbstractCommand):
 
     def execute(self):
         print('Misc...')
+        return True
 
-        balance = self._service_component.get_asset_balance('USDT')
-        print('Balance:', balance)
+    def test_asset_balance(self):
+        """
+        # for all available assets
+        for asset in BalanceMapper.get_assets():
+            # get asset balance from Binance
+            binance_balance = self._service_component.get_asset_balance(asset)
+            info(f"Asset {asset} balance: {binance_balance} -> {BalanceMapper.map_asset(binance_balance['asset'])}")
+            # last balance obj from db of the same asset with the same free&locked
+            balance_db = (
+                Balance.select()
+                    .where(
+                        (Balance.asset == BalanceMapper.map_asset(binance_balance['asset']))
+                        &
+                        (Balance.free == Decimal(binance_balance['free']))
+                        &
+                        (Balance.locked == Decimal(binance_balance['locked']))
+                    )
+                    .order_by(Balance.checked_at.desc())
+                    .limit(1)
+                    .first()
+            )
+            # if it's present = update its checked_at time, no need to insert new record
+            if balance_db:
+                info (f'Balance existed record found, id: {balance_db.id}')
+                balance_db.updated_at = current_millis()
+                balance_db.checked_at = current_millis()
+            else: # otherwise - insert new record
+                info(f'Balance existed record not found, creating the new one...')
+                balance_db = Balance().fill_from_binance(binance_balance)
 
+            if balance_db.save():
+                info(f'Balance saved: {balance_db.as_dict()}')
+            else:
+                error(f"Cannot save balance record: {balance_db.as_dict()}")
+        """
         return True
 
     def test_asset_ledgers(self):

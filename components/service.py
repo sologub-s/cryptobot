@@ -1,5 +1,12 @@
+from decimal import Decimal
 from io import BytesIO
+from logging import info, error
 
+from peewee import MySQLDatabase
+
+from helpers import current_millis
+from mappers.balance_mapper import BalanceMapper
+from models import Balance
 from .binance_raw_client import BinanceRawClientComponent
 from .binance import BinanceComponent
 from .telegram import TelegramComponent
@@ -10,18 +17,21 @@ class ServiceComponent:
             binance_component: BinanceComponent,
             binance_raw_client_component: BinanceRawClientComponent,
             telegram_component: TelegramComponent,
+            db: MySQLDatabase,
     ):
         super().__init__()
         self.binance_component = binance_component
         self.binance_raw_client_component = binance_raw_client_component
         self.telegram_component = telegram_component
+        self.db = db
 
     @classmethod
-    def create(cls, config: dict):
+    def create(cls, config: dict, db: MySQLDatabase):
         return cls(
             binance_component=BinanceComponent.create(config["binance"]),
             binance_raw_client_component=BinanceRawClientComponent.create(config["binance"]),
             telegram_component=TelegramComponent.create(config["telegram"]),
+            db=db,
         )
 
     def get_open_orders(self):
@@ -71,3 +81,46 @@ class ServiceComponent:
 
     def get_asset_balance(self, asset=None):
         return self.binance_component.get_asset_balance(asset)
+
+    def update_assets_from_binance_to_db(self, assets: list=None, force_insert=False):
+        if assets is None:
+            assets = []
+        saved_count = 0
+        for asset in assets:
+            with self.db.atomic():
+                # get asset balance from Binance
+                binance_balance = self.get_asset_balance(asset)
+                info(f"Asset {asset} balance: {binance_balance} -> {BalanceMapper.map_asset(binance_balance['asset'])}")
+                # last balance obj from db of the same asset with the same free&locked
+                if force_insert:
+                    balance_db = None
+                else:
+                    balance_db = (
+                        Balance.select()
+                            .where(
+                                (Balance.asset == BalanceMapper.map_asset(binance_balance['asset']))
+                                &
+                                (Balance.free == Decimal(binance_balance['free']))
+                                &
+                                (Balance.locked == Decimal(binance_balance['locked']))
+                            )
+                            .order_by(Balance.checked_at.desc())
+                            .limit(1)
+                            .first()
+                    )
+                # if it's present = update its checked_at time, no need to insert new record
+                if balance_db:
+                    info (f'Balance existed record found (force_insert: {force_insert}), id: {balance_db.id}')
+                    balance_db.updated_at = current_millis()
+                    balance_db.checked_at = current_millis()
+                else: # otherwise - insert new record
+                    info(f'Balance existed record not found (force_insert: {force_insert}), creating the new one...')
+                    balance_db = Balance().fill_from_binance(binance_balance)
+
+                if balance_db.save():
+                    info(f'Balance saved: {balance_db.as_dict()}')
+                    saved_count += 1
+                else:
+                    error(f"Cannot save balance record: {balance_db.as_dict()}")
+        return saved_count
+

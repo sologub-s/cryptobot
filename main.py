@@ -49,7 +49,7 @@ def main():
         'view': View(environment, default_vars),
         'plt': plt,
         'db': db,
-        'service_component': ServiceComponent.create(config),
+        'service_component': ServiceComponent.create(config, db),
     }
 
     # commands dispatching

@@ -1,7 +1,10 @@
+from decimal import Decimal
+
 from commands import AbstractCommand
 from components import ServiceComponent
+from mappers.balance_mapper import BalanceMapper
 from mappers.order_mapper import OrderMapper
-from models import Order, CronJob
+from models import Order, CronJob, Balance
 from views.view import View
 from helpers import find_first_key_by_value, current_millis
 
@@ -37,7 +40,7 @@ class CronCommand(AbstractCommand):
         handlers_list = {
             'check-all-orders-from-binance': self.handler_check_all_orders_from_binance,
             'notify-working': self.handler_notify_working,
-            #'check-balance-from-binance': self.handler_check_balance_from_binance,
+            'check-balance-from-binance': self.handler_check_balance_from_binance,
         }
 
         cron_jobs_to_execute = list(
@@ -75,6 +78,8 @@ class CronCommand(AbstractCommand):
         # get all orders from binance
         all_binance_orders = self._service_component.get_all_orders('ETHUSDT')
 
+        changed_orders: int = 0
+
         for binance_order in all_binance_orders:
             #upsert order into db if not exists
             if binance_order['orderId'] not in all_db_orders_indexed:
@@ -87,6 +92,8 @@ class CronCommand(AbstractCommand):
                 previous_status: str = find_first_key_by_value(OrderMapper.status_mapping, all_db_orders_indexed[binance_order['orderId']].status, 'UNKNOWN')
                 all_db_orders_indexed[binance_order['orderId']].status = mapped_binance_status
                 all_db_orders_indexed[binance_order['orderId']].save()
+                # update saved_orders counter
+                changed_orders += 1
                 # send telegram notification
                 message = self._view.render('telegram/orders/order_status_changed.j2', {
                     'order': binance_order,
@@ -102,6 +109,13 @@ class CronCommand(AbstractCommand):
                 self._service_component.send_telegram_message(self._payload["chat_id"], self._view.render(
                     'telegram/or_choose_another_option.j2', {}))
 
+        if changed_orders > 0:
+            # update assets balances
+            self._service_component.update_assets_from_binance_to_db(
+                assets=BalanceMapper.get_assets().keys(),
+                force_insert=True,
+            )
+
         return True
 
     def handler_notify_working(self):
@@ -110,5 +124,12 @@ class CronCommand(AbstractCommand):
         return True
 
     def handler_check_balance_from_binance(self):
-        return None
+        # for all available assets
+        assets_updated = self._service_component.update_assets_from_binance_to_db(
+            assets=BalanceMapper.get_assets().keys(),
+            force_insert=False,
+        )
+        info(f"Assets updated from Binance to db: '{assets_updated}'")
+
+        return True
 
