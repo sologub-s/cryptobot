@@ -4,7 +4,7 @@ from commands import AbstractCommand
 from components import ServiceComponent
 from mappers.balance_mapper import BalanceMapper
 from mappers.order_mapper import OrderMapper
-from models import Order, CronJob, Balance
+from models import Order, CronJob, Balance, OrderFillingHistory
 from views.view import View
 from helpers import find_first_key_by_value, current_millis
 
@@ -78,22 +78,52 @@ class CronCommand(AbstractCommand):
         # get all orders from binance
         all_binance_orders = self._service_component.get_all_orders('ETHUSDT')
 
-        changed_orders: int = 0
+        changed_orders_present: bool = False
 
         for binance_order in all_binance_orders:
             #upsert order into db if not exists
+            # test
+            #if binance_order['orderId'] == 33048596553:
+            #    binance_order['status'] = 'PARTIALLY_FILLED'
             if binance_order['orderId'] not in all_db_orders_indexed:
                 all_db_orders_indexed[binance_order['orderId']] = Order().fill_from_binance(binance_order)
                 all_db_orders_indexed[binance_order['orderId']].upsert()
+            db_order = all_db_orders_indexed[binance_order['orderId']]
             mapped_binance_status = OrderMapper.map_status(binance_order['status'])
+            # test
+            #if binance_order['orderId'] == 33048596553:
+            #    binance_order['executedQty'] = '0.00150000'
+            #    binance_order['cummulativeQuoteQty'] = '10.02100000'
+            # if executedQty has changed
+            #print(binance_order['orderId'], float(binance_order['executedQty']), float(db_order.executed_quantity))
+            if float(binance_order['executedQty']) != float(db_order.executed_quantity):
+                # implement saving to `orders_filling_history`
+                order_filling_history = OrderFillingHistory().fill_from_binance(binance_order)
+                order_filling_history.order_id = db_order.id
+                order_filling_history.logged_at = millis_on_start -1
+                order_filling_history.save()
+                # send telegram notification
+                message_qty = self._view.render('telegram/orders/order_executed_quantity_changed.j2', {
+                    'binance_order': binance_order,
+                    'db_order': db_order,
+                })
+                keys = [
+                    f"show_order_status:{binance_order['orderId']}:{binance_order['symbol']}",
+                ]
+                inline_keyboard: list = []
+                for key in keys:
+                    inline_keyboard.append([{"text": key, "callback_data": key}, ])
+                self._service_component.send_telegram_message(self._payload["chat_id"], message_qty, inline_keyboard)
+                self._service_component.send_telegram_message(self._payload["chat_id"], self._view.render(
+                    'telegram/or_choose_another_option.j2', {}))
             # if status has changed
-            if mapped_binance_status != all_db_orders_indexed[binance_order['orderId']].status:
+            if mapped_binance_status != db_order.status:
                 # save new status to db
-                previous_status: str = find_first_key_by_value(OrderMapper.status_mapping, all_db_orders_indexed[binance_order['orderId']].status, 'UNKNOWN')
-                all_db_orders_indexed[binance_order['orderId']].status = mapped_binance_status
-                all_db_orders_indexed[binance_order['orderId']].save()
+                previous_status: str = find_first_key_by_value(OrderMapper.status_mapping, db_order.status, 'UNKNOWN')
+                db_order.status = mapped_binance_status
+                db_order.save()
                 # update saved_orders counter
-                changed_orders += 1
+                changed_orders_present = True
                 # send telegram notification
                 message = self._view.render('telegram/orders/order_status_changed.j2', {
                     'order': binance_order,
@@ -109,7 +139,7 @@ class CronCommand(AbstractCommand):
                 self._service_component.send_telegram_message(self._payload["chat_id"], self._view.render(
                     'telegram/or_choose_another_option.j2', {}))
 
-        if changed_orders > 0:
+        if changed_orders_present:
             # update assets balances
             self._service_component.update_assets_from_binance_to_db(
                 assets=BalanceMapper.get_assets().keys(),
