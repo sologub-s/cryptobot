@@ -62,6 +62,7 @@ class WebserverCommand(AbstractCommand):
             except Exception as e:
                 return jsonify({"status": "error", "error": str(e)}), 500
 
+        """
         @app.route("/cron", methods=["GET"])
         def cron_hook():
             #data = request.get_json(force=True, silent=True) or {}
@@ -80,6 +81,7 @@ class WebserverCommand(AbstractCommand):
                 return jsonify({"status": "ok", "output": result.stdout})
             except Exception as e:
                 return jsonify({"status": "error", "error": str(e)}), 500
+        """
 
         app.run(host = self._payload["host"], port = self._payload["port"])
         return True

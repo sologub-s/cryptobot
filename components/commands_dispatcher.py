@@ -80,7 +80,10 @@ def dispatch(di: dict, args) -> None | tuple[None, type[ShowOrdersCommand]] | tu
             None,
             CronCommand()
                 .set_payload(
-                    args.chat_id,
+                    #args.chat_id,
+                    # TODO: remove chat_id
+                    #   send messages to order's owners (need table for that)
+                    di['config']['telegram']['chat_id'],
                 )
                 .set_deps(di['service_component'], di['view'])
         )
@@ -140,8 +143,9 @@ def parse_args(cli_name: str):
 
     subparsers.add_parser("hook", help="Dispatch & execute hook")
 
-    parser_cron = subparsers.add_parser("cron", help="Run cron tasks")
-    parser_cron.add_argument("--chat_id", type=int, help="Telegram chat id")
+    subparsers.add_parser("cron", help="Run cron tasks")
+    #parser_cron = subparsers.add_parser("cron", help="Run cron tasks")
+    #parser_cron.add_argument("--chat_id", type=int, help="Telegram chat id")
 
     subparsers.add_parser("misc", help="Some misc checks etc.")
 
