@@ -5,13 +5,14 @@ from helpers import slugify
 import requests
 
 class TelegramComponent:
-    def __init__(self, bot_token: str):
+    def __init__(self, bot_token: str, bot_api_secret_token: str):
         super().__init__()
         self.bot_token = bot_token
+        self.bot_api_secret_token = bot_api_secret_token
 
     @classmethod
     def create(cls, telegram_config: dict):
-        return cls(telegram_config["bot_token"])
+        return cls(telegram_config["bot_token"], telegram_config["bot_api_secret_token"])
 
     @property
     def bot_token(self):
@@ -20,6 +21,14 @@ class TelegramComponent:
     @bot_token.setter
     def bot_token(self, bot_token: str):
         self.__bot_token = bot_token
+
+    @property
+    def bot_api_secret_token(self):
+        return self.__bot_api_secret_token
+
+    @bot_api_secret_token.setter
+    def bot_api_secret_token(self, bot_api_secret_token: str):
+        self.__bot_api_secret_token = bot_api_secret_token
 
     def get_reply_markup(self):
         return\
@@ -33,6 +42,9 @@ class TelegramComponent:
                 "resize_keyboard": True,
                 "one_time_keyboard": False
             }
+
+    def check_telegram_bot_api_secret_token(self, bot_api_secret_token: str) -> bool:
+        return bot_api_secret_token == self.__bot_api_secret_token
 
     def send_telegram_message(self, chat_id: int, text: str, inline_keyboard: list = [], disable_notification=False, parse_mode="HTML"):
         url = f"https://api.telegram.org/bot{self.bot_token}/sendMessage"

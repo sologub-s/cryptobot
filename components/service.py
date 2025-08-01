@@ -34,6 +34,9 @@ class ServiceComponent:
             db=db,
         )
 
+    def check_telegram_bot_api_secret_token(self, bot_api_secret_token: str) -> bool:
+        return self.telegram_component.check_telegram_bot_api_secret_token(bot_api_secret_token)
+
     def get_open_orders(self):
         return self.binance_component.get_open_orders()
 

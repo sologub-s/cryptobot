@@ -20,6 +20,7 @@ def get_config() -> dict:
             "bot_token": os.getenv("TELEGRAM_BOT_TOKEN", ""),
             "bot_username": os.getenv("TELEGRAM_BOT_USERNAME", ""),
             "chat_id": os.getenv("TELEGRAM_CHAT_ID", ""),
+            "bot_api_secret_token": os.getenv("TELEGRAM_BOT_API_SECRET_TOKEN", ""),
         },
         "view": {
             "views_folder": "../views"

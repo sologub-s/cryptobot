@@ -30,6 +30,13 @@ class WebserverCommand(AbstractCommand):
         print(f"Starting to listen to Telegram hook for chat_id={self._payload['chat_id']} ...")
 
         app = Flask(__name__)
+        @app.before_request
+        def verify_telegram_secret():
+            if request.path.startswith("/telegram/cryptobot"):
+                bot_api_secret_token = request.headers.get("X-Telegram-Bot-Api-Secret-Token")
+                if not self._service_component.check_telegram_bot_api_secret_token(bot_api_secret_token):
+                    error("Wrong X-Telegram-Bot-Api-Secret-Token")
+                    return jsonify({"error": "Forbidden"}), 403
         @app.route("/telegram/cryptobot", methods=["POST"])
         def telegram_hook():
             data = request.get_json(force=True, silent=True) or {}
