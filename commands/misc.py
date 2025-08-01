@@ -7,6 +7,7 @@ from logging import info, error
 import matplotlib
 
 from helpers import current_millis
+from helpers.money import calculate_order_quantity
 from mappers.balance_mapper import BalanceMapper
 from models import Order, CronJob, Balance
 
@@ -39,6 +40,28 @@ class MiscCommand(AbstractCommand):
 
     def execute(self):
         print('Misc...')
+
+        bc = self._service_component.binance_component.binance_client
+
+        symbol_info = bc.get_symbol_info("ETHUSDT")
+        step_size = None
+        for f in symbol_info["filters"]:
+            if f["filterType"] == "LOT_SIZE":
+                step_size = Decimal(f["stepSize"])
+                break
+        print(f'step_size: {step_size}')
+
+        binance_balance = self._service_component.get_asset_balance('USDT')
+        print(f'binance_balance: {binance_balance}')
+        actual_balance = Decimal(binance_balance['free']) + Decimal(binance_balance['locked'])
+        safe_balance = actual_balance * Decimal("0.999")
+        print(f'actual_balance: {actual_balance}')
+
+        price: Decimal = Decimal('3600.00')
+
+        buy_qty = calculate_order_quantity(safe_balance, price, step_size, "BUY")
+        print(f"BUY quantity: {buy_qty}")
+
         return True
 
     def test_asset_balance(self):

@@ -105,12 +105,15 @@ class CronCommand(AbstractCommand):
             #    binance_order['cummulativeQuoteQty'] = '10.02100000'
             # if executedQty has changed
             #print(binance_order['orderId'], float(binance_order['executedQty']), float(db_order.executed_quantity))
-            if float(binance_order['executedQty']) != float(db_order.executed_quantity):
+            if Decimal(binance_order['executedQty']) != Decimal(db_order.executed_quantity):
                 # implement saving to `orders_filling_history`
                 order_filling_history = OrderFillingHistory().fill_from_binance(binance_order)
                 order_filling_history.order_id = db_order.id
                 order_filling_history.logged_at = millis_on_start -1
                 order_filling_history.save()
+                db_order.executed_quantity = Decimal(binance_order['executedQty'])
+                db_order.cummulative_quote_quantity = Decimal(binance_order['cummulativeQuoteQty'])
+                db_order.save()
                 # send telegram notification
                 message_qty = self._view.render('telegram/orders/order_executed_quantity_changed.j2', {
                     'binance_order': binance_order,
