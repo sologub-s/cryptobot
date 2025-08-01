@@ -6,7 +6,7 @@ from peewee import MySQLDatabase
 
 from helpers import current_millis
 from mappers.balance_mapper import BalanceMapper
-from models import Balance
+from models import Balance, Order
 from .binance_raw_client import BinanceRawClientComponent
 from .binance import BinanceComponent
 from .telegram import TelegramComponent
@@ -124,3 +124,7 @@ class ServiceComponent:
                     error(f"Cannot save balance record: {balance_db.as_dict()}")
         return saved_count
 
+    def create_or_update_db_order(self, binance_order: dict):
+        db_order = Order().fill_from_binance(binance_order)
+        db_order.upsert()
+        return db_order

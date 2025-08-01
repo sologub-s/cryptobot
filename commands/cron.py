@@ -1,6 +1,6 @@
 from decimal import Decimal
 
-from commands import AbstractCommand
+from commands import AbstractCommand, ShowOrderStatusCommand
 from components import ServiceComponent
 from mappers.balance_mapper import BalanceMapper
 from mappers.order_mapper import OrderMapper
@@ -86,9 +86,18 @@ class CronCommand(AbstractCommand):
             #if binance_order['orderId'] == 33048596553:
             #    binance_order['status'] = 'PARTIALLY_FILLED'
             if binance_order['orderId'] not in all_db_orders_indexed:
-                all_db_orders_indexed[binance_order['orderId']] = Order().fill_from_binance(binance_order)
-                all_db_orders_indexed[binance_order['orderId']].upsert()
-            db_order = all_db_orders_indexed[binance_order['orderId']]
+                db_order = self._service_component.create_or_update_db_order(binance_order)
+                m_order_created = self._view.render('telegram/orders/order_created.j2', {
+                    'order': db_order,
+                })
+                self._service_component.send_telegram_message(self._payload["chat_id"], m_order_created)
+                (ShowOrderStatusCommand()
+                    .set_payload(db_order.binance_order_id, binance_order['symbol'], self._payload["chat_id"])
+                    .set_deps(self._service_component, self._view)
+                    .execute()
+                )
+            else:
+                db_order = all_db_orders_indexed[binance_order['orderId']]
             mapped_binance_status = OrderMapper.map_status(binance_order['status'])
             # test
             #if binance_order['orderId'] == 33048596553:
@@ -137,7 +146,8 @@ class CronCommand(AbstractCommand):
                     inline_keyboard.append([{"text": key, "callback_data": key}, ])
                 self._service_component.send_telegram_message(self._payload["chat_id"], message, inline_keyboard)
                 self._service_component.send_telegram_message(self._payload["chat_id"], self._view.render(
-                    'telegram/or_choose_another_option.j2', {}))
+                    'telegram/or_choose_another_option.j2', {}
+                ))
 
         if changed_orders_present:
             # update assets balances
