@@ -217,10 +217,16 @@ class ServiceComponent:
             except Exception as e:
                 info(e.__dict__)
                 if 'LOT_SIZE' in e.__dict__['message']:
-                    info(f"buy_qty '{quantity}' is too big (cannot pass LOT_SIZE validation, decreasing by step_size '{step_size}')")
+                    err_m = f"buy_qty '{quantity}' is too big (cannot pass LOT_SIZE validation, decreasing by step_size '{step_size}')"
+                    info(err_m)
+                    self.send_telegram_message(chat_id, err_m)
                     quantity -= step_size
                     info('sleeping 5 secs...')
                     time.sleep(5)
+                else:
+                    err_m = f"create_test_order ERROR: {e}"
+                    error(err_m)
+                    self.send_telegram_message(chat_id, err_m)
                 if quantity <= 0:
                     info(f'not enough balance for minimal order: {quantity}')
                     break
