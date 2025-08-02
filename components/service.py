@@ -228,7 +228,9 @@ class ServiceComponent:
                     error(err_m)
                     self.send_telegram_message(chat_id, err_m)
                 if quantity <= 0:
-                    info(f'not enough balance for minimal order: {quantity}')
+                    err_m = f'not enough balance for minimal order: {quantity}'
+                    info(err_m)
+                    self.send_telegram_message(chat_id, err_m)
                     break
 
         info(f'can_create: {can_create}')
