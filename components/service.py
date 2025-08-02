@@ -1,11 +1,13 @@
+import time
 from decimal import Decimal
 from io import BytesIO
 from logging import info, error
 
 from peewee import MySQLDatabase
 
-from helpers import current_millis
+from helpers import current_millis, calculate_order_quantity
 from mappers.balance_mapper import BalanceMapper
+from mappers.order_mapper import OrderMapper
 from models import Balance, Order
 from .binance_raw_client import BinanceRawClientComponent
 from .binance import BinanceComponent
@@ -131,3 +133,105 @@ class ServiceComponent:
         db_order = Order().fill_from_binance(binance_order)
         db_order.upsert()
         return db_order
+
+    def create_order_on_binance(self, chat_id: int, str_price:str = None, db_symbol:int=None, db_side:int=None,) -> None|dict:
+
+        info('!!! PREPARING TO CREATE ORDER ON BINANCE !!!')
+
+        if not str_price:
+            error('Cannot create order on Binance - str_price not set')
+            return None
+        else:
+            #price: Decimal = Decimal('3600.00')
+            price = Decimal(str_price)
+
+        if not db_symbol:
+            error('Cannot create order on Binance - db_symbol not set')
+            return None
+        else:
+            #symbol = 'ETHUSDT'
+            symbol = OrderMapper.remap_symbol(db_symbol)
+            if not symbol:
+                error(f"Cannot create order on Binance - unknown symbol '{db_symbol}'")
+
+        if not db_side:
+            error('Cannot create order on Binance - db_side not set')
+            return None
+        else:
+            #side = 'BUY'
+            side = OrderMapper.remap_side(db_side)
+            if not side:
+                error(f"Cannot create order on Binance - unknown side '{db_side}'")
+
+        symbol_info = self.binance_component.get_symbol_info(symbol)
+        if side == 'BUY':
+            asset_to_sell = symbol_info['quoteAsset']
+        else:
+            asset_to_sell = symbol_info['baseAsset']
+
+        step_size = None
+        min_qty = None
+        max_qty = None
+        min_notional = None
+
+        for f in symbol_info["filters"]:
+            if f["filterType"] == "LOT_SIZE":
+                step_size = Decimal(f["stepSize"])
+                min_qty = Decimal(f["minQty"])
+                max_qty = Decimal(f["maxQty"])
+            elif f["filterType"] == "MIN_NOTIONAL":
+                min_notional = Decimal(f["minNotional"])
+
+        info(f'asset_to_sell: {asset_to_sell}')
+        info(f'step_size: {step_size}')
+        info(f'min_qty: {min_qty}')
+        info(f'max_qty: {max_qty}')
+        info(f'min_notional: {min_notional}')
+
+        binance_balance = self.get_asset_balance(asset_to_sell)
+        info(f'binance_balance: {binance_balance}')
+        actual_balance = Decimal(binance_balance['free'])
+        info(f'actual_balance: {actual_balance}')
+
+        quantity = calculate_order_quantity(actual_balance, price, step_size, side)
+        info(f"quantity: {quantity}")
+
+        can_create = False
+        tries = 0
+        while not can_create and tries <= 10:
+            info('trying to create test order')
+            tries += 1
+            try:
+                params: dict = {
+                    'symbol': symbol,
+                    'side': side,
+                    'type': 'LIMIT',
+                    'timeInForce': 'GTC',
+                    'quantity': str(quantity),
+                    'price': str(price),
+                }
+                info(f"attempt #{tries} to create test order on binance with the following params: {params}...")
+                result = self.binance_component.create_test_order(**params)
+                info(f'result: {result}')
+                can_create = True
+            except Exception as e:
+                info(e.__dict__)
+                if 'LOT_SIZE' in e.__dict__['message']:
+                    info(f"buy_qty '{quantity}' is too big (cannot pass LOT_SIZE validation, decreasing by step_size '{step_size}')")
+                    quantity -= step_size
+                    info('sleeping 5 secs...')
+                    time.sleep(5)
+                if quantity <= 0:
+                    info(f'not enough balance for minimal order: {quantity}')
+                    break
+
+        info(f'can_create: {can_create}')
+
+        if can_create:
+            # create real order here
+            m = f"REAL ORDER ON BINANCE CREATION SHOULD BE HERE, the params: {params}"
+            info(m)
+            # todo replace with order's owner's chat_id
+            self.send_telegram_message(chat_id, m,)
+            return True
+        return False

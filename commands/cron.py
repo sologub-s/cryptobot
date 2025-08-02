@@ -1,4 +1,5 @@
 from decimal import Decimal
+from time import sleep
 
 from commands import AbstractCommand, ShowOrderStatusCommand
 from components import ServiceComponent
@@ -6,7 +7,7 @@ from mappers.balance_mapper import BalanceMapper
 from mappers.order_mapper import OrderMapper
 from models import Order, CronJob, Balance, OrderFillingHistory
 from views.view import View
-from helpers import find_first_key_by_value, current_millis
+from helpers import find_first_key_by_value, current_millis, increase_price_percent, decrease_price_percent, dec_to_str
 
 import logging
 from logging import error, info, warning, debug
@@ -134,8 +135,12 @@ class CronCommand(AbstractCommand):
                 previous_status: str = find_first_key_by_value(OrderMapper.status_mapping, db_order.status, 'UNKNOWN')
                 db_order.status = mapped_binance_status
                 db_order.save()
-                # update saved_orders counter
-                changed_orders_present = True
+                # update assets balances
+                sleep(1)
+                self._service_component.update_assets_from_binance_to_db(
+                    assets=BalanceMapper.get_assets().keys(),
+                    force_insert=True,
+                )
                 # send telegram notification
                 message = self._view.render('telegram/orders/order_status_changed.j2', {
                     'order': binance_order,
@@ -151,13 +156,20 @@ class CronCommand(AbstractCommand):
                 self._service_component.send_telegram_message(self._payload["chat_id"], self._view.render(
                     'telegram/or_choose_another_option.j2', {}
                 ))
+                if db_order.status == OrderMapper.STATUS_FILLED:
+                    # creating new order
+                    order_params: dict = {
+                        'chat_id': self._payload["chat_id"],
+                        'db_symbol': db_order.symbol,
+                    }
+                    if db_order.side == OrderMapper.SIDE_BUY:
+                        order_params['db_side'] = OrderMapper.SIDE_SELL
+                        order_params['str_price'] = dec_to_str(increase_price_percent(Decimal(db_order.order_price), Decimal(5)))
+                    if db_order.side == OrderMapper.SIDE_SELL:
+                        order_params['db_side'] = OrderMapper.SIDE_BUY
+                        order_params['str_price'] = dec_to_str(decrease_price_percent(Decimal(db_order.order_price), Decimal(5)))
+                    self._service_component.create_order_on_binance(**order_params)
 
-        if changed_orders_present:
-            # update assets balances
-            self._service_component.update_assets_from_binance_to_db(
-                assets=BalanceMapper.get_assets().keys(),
-                force_insert=True,
-            )
 
         return True
 

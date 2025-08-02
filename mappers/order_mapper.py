@@ -43,6 +43,11 @@ class OrderMapper:
             "EXPIRED_IN_MATCH": STATUS_EXPIRED_IN_MATCH,
         }
 
+    symbol_mapping = {
+        'UNKNOWN': 0,
+        'ETHUSDT': 1,
+    }
+
     @classmethod
     def map_symbol(cls, symbol: str) -> int:
         if not symbol:
@@ -51,6 +56,13 @@ class OrderMapper:
         if symbol == "ETHUSDT":
             return cls.SYMBOL_ETHUSDT
         return cls.SYMBOL_UNKNOWN
+
+    @classmethod
+    def remap_symbol(cls, symbol: int) -> str|None:
+        for binance_symbol in cls.symbol_mapping:
+            if cls.symbol_mapping[binance_symbol] == symbol:
+                return binance_symbol
+        return None
 
     @classmethod
     def map_side(cls, side: str) -> int:
@@ -62,6 +74,16 @@ class OrderMapper:
         if side == "SELL":
             return cls.SIDE_SELL
         return cls.SIDE_UNKNOWN
+
+    @classmethod
+    def remap_side(cls, side: int) -> str|None:
+        if not side:
+            return None
+        if side == cls.SIDE_BUY:
+            return 'BUY'
+        if side == cls.SIDE_SELL:
+            return 'SELL'
+        return None
 
     @classmethod
     def map_status(cls, status: str) -> int:

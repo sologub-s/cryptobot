@@ -94,6 +94,7 @@ def dispatch(di: dict, args) -> None | tuple[None, type[ShowOrdersCommand]] | tu
                 .set_deps(
                     service_component = di['service_component'],
                     view = di['view'],
+                    config = di['config'],
                 )
         )
 

@@ -85,3 +85,9 @@ class BinanceComponent:
         except Exception as e:
             print(f"ERROR: cannot get the asset balance for asset: {asset}", e)
             return {}
+
+    def get_symbol_info(self, symbol: str):
+        return self.binance_client.get_symbol_info(symbol)
+
+    def create_test_order(self, **params):
+        return self.binance_client.create_test_order(**params)

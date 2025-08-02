@@ -7,8 +7,9 @@ from logging import info, error
 import matplotlib
 
 from helpers import current_millis
-from helpers.money import calculate_order_quantity
+from helpers.money import calculate_order_quantity, dec_to_str, increase_price_percent, decrease_price_percent
 from mappers.balance_mapper import BalanceMapper
+from mappers.order_mapper import OrderMapper
 from models import Order, CronJob, Balance
 
 matplotlib.use('Agg')
@@ -31,36 +32,36 @@ class MiscCommand(AbstractCommand):
     def __init__(self):
         super().__init__()
         self._view = None
+        self._config = None
         self._initialized = True
 
-    def set_deps(self, service_component: ServiceComponent, view: View):
+    def set_deps(self, service_component: ServiceComponent, view: View, config: dict):
         self._service_component = service_component
         self._view = view
+        self._config = config
         return self
 
     def execute(self):
         print('Misc...')
 
-        bc = self._service_component.binance_component.binance_client
+        # mock from existed order
+        #binance_order_id = 33375951540
+        binance_order_id = 33426428405
+        db_order = Order.select().where(Order.binance_order_id == binance_order_id).first()
+        info(f"db_order: {db_order.as_dict()}")
 
-        symbol_info = bc.get_symbol_info("ETHUSDT")
-        step_size = None
-        for f in symbol_info["filters"]:
-            if f["filterType"] == "LOT_SIZE":
-                step_size = Decimal(f["stepSize"])
-                break
-        print(f'step_size: {step_size}')
-
-        binance_balance = self._service_component.get_asset_balance('USDT')
-        print(f'binance_balance: {binance_balance}')
-        actual_balance = Decimal(binance_balance['free']) + Decimal(binance_balance['locked'])
-        safe_balance = actual_balance * Decimal("0.999")
-        print(f'actual_balance: {actual_balance}')
-
-        price: Decimal = Decimal('3600.00')
-
-        buy_qty = calculate_order_quantity(safe_balance, price, step_size, "BUY")
-        print(f"BUY quantity: {buy_qty}")
+        # creating new order
+        order_params: dict = {
+            'chat_id': self._config['telegram']['chat_id'],
+            'db_symbol': db_order.symbol,
+        }
+        if db_order.side == OrderMapper.SIDE_BUY:
+            order_params['db_side'] = OrderMapper.SIDE_SELL
+            order_params['str_price'] = dec_to_str(increase_price_percent(Decimal(db_order.order_price), Decimal(5)))
+        if db_order.side == OrderMapper.SIDE_SELL:
+            order_params['db_side'] = OrderMapper.SIDE_BUY
+            order_params['str_price'] = dec_to_str(decrease_price_percent(Decimal(db_order.order_price), Decimal(5)))
+        self._service_component.create_order_on_binance(**order_params)
 
         return True
 
