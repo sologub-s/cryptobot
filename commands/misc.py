@@ -6,7 +6,7 @@ from logging import info, error
 
 import matplotlib
 
-from helpers import current_millis
+from helpers import current_millis, l
 from helpers.money import calculate_order_quantity, dec_to_str, increase_price_percent, decrease_price_percent
 from mappers.balance_mapper import BalanceMapper
 from mappers.order_mapper import OrderMapper
@@ -43,7 +43,12 @@ class MiscCommand(AbstractCommand):
 
     def execute(self):
         print('Misc...')
+        l(self._service_component, f"hello world from info !", self._config['telegram']['chat_id'], 'info')
+        l(self._service_component, f"hello world from warning !", self._config['telegram']['chat_id'], 'warning')
+        l(self._service_component, f"hello world from error !", self._config['telegram']['chat_id'], 'error')
+        return True
 
+    def test_create_order(self):
         # mock from existed order
         #binance_order_id = 33375951540
         binance_order_id = 33426428405

@@ -6,7 +6,7 @@ from views.view import View
 
 from peewee import MySQLDatabase
 
-from helpers import current_millis, calculate_order_quantity
+from helpers import current_millis, calculate_order_quantity, l
 from mappers.balance_mapper import BalanceMapper
 from mappers.order_mapper import OrderMapper
 from models import Balance, Order, OrderFillingHistory
@@ -208,32 +208,32 @@ class ServiceComponent:
 
     def create_order_on_binance(self, chat_id: int, str_price:str = None, db_symbol:int=None, db_side:int=None,) -> None|dict:
 
-        info('!!! PREPARING TO CREATE ORDER ON BINANCE !!!')
+        l(self, f"!!! PREPARING TO CREATE ORDER ON BINANCE !!!", chat_id, 'info')
 
         if not str_price:
-            error('Cannot create order on Binance - str_price not set')
+            l(self, f"Cannot create order on Binance - str_price not set", chat_id, 'error')
             return None
         else:
             #price: Decimal = Decimal('3600.00')
             price = Decimal(str_price)
 
         if not db_symbol:
-            error('Cannot create order on Binance - db_symbol not set')
+            l(self, f"Cannot create order on Binance - db_symbol not set", chat_id, 'error')
             return None
         else:
             #symbol = 'ETHUSDT'
             symbol = OrderMapper.remap_symbol(db_symbol)
             if not symbol:
-                error(f"Cannot create order on Binance - unknown symbol '{db_symbol}'")
+                l(self, f"Cannot create order on Binance - unknown symbol '{db_symbol}'", chat_id, 'error')
 
         if not db_side:
-            error('Cannot create order on Binance - db_side not set')
+            l(self, f"Cannot create order on Binance - db_side not set", chat_id, 'error')
             return None
         else:
             #side = 'BUY'
             side = OrderMapper.remap_side(db_side)
             if not side:
-                error(f"Cannot create order on Binance - unknown side '{db_side}'")
+                l(self, f"Cannot create order on Binance - unknown side '{db_side}'", chat_id, 'error')
 
         symbol_info = self.binance_component.get_symbol_info(symbol)
         if side == 'BUY':
@@ -254,24 +254,24 @@ class ServiceComponent:
             elif f["filterType"] == "MIN_NOTIONAL":
                 min_notional = Decimal(f["minNotional"])
 
-        info(f'asset_to_sell: {asset_to_sell}')
-        info(f'step_size: {step_size}')
-        info(f'min_qty: {min_qty}')
-        info(f'max_qty: {max_qty}')
-        info(f'min_notional: {min_notional}')
+        l(self, f"asset_to_sell: {asset_to_sell}", chat_id, 'info')
+        l(self, f"step_size: {step_size}", chat_id, 'info')
+        l(self, f"min_qty: {min_qty}", chat_id, 'info')
+        l(self, f"max_qty: {max_qty}", chat_id, 'info')
+        l(self, f"min_notional: {min_notional}", chat_id, 'info')
 
         binance_balance = self.get_asset_balance(asset_to_sell)
-        info(f'binance_balance: {binance_balance}')
+        l(self, f"binance_balance: {binance_balance}", chat_id, 'info')
         actual_balance = Decimal(binance_balance['free'])
-        info(f'actual_balance: {actual_balance}')
+        l(self, f"actual_balance: {actual_balance}", chat_id, 'info')
 
         quantity = calculate_order_quantity(actual_balance, price, step_size, side)
-        info(f"quantity: {quantity}")
+        l(self, f"quantity: {quantity}", chat_id, 'info')
 
         can_create = False
         tries = 0
         while not can_create and tries <= 10:
-            info('trying to create test order')
+            l(self, f"trying to create test order...", chat_id, 'info')
             tries += 1
             try:
                 params: dict = {
@@ -282,36 +282,37 @@ class ServiceComponent:
                     'quantity': str(quantity),
                     'price': str(price),
                 }
-                info(f"attempt #{tries} to create test order on binance with the following params: {params}...")
+                l(self, f"attempt #{tries} to create test order on binance with the following params: {params}...", chat_id, 'info')
                 result = self.binance_component.create_test_order(**params)
-                info(f'result: {result}')
+                l(self, f"create_test_order() result: {result}", chat_id, 'info')
                 can_create = True
             except Exception as e:
-                info(e.__dict__)
+                l(self, str(e.__dict__), chat_id, 'error')
                 if 'LOT_SIZE' in e.__dict__['message']:
                     err_m = f"buy_qty '{quantity}' is too big (cannot pass LOT_SIZE validation, decreasing by step_size '{step_size}')"
-                    info(err_m)
+                    l(self, err_m, chat_id, 'error')
                     self.send_telegram_message(chat_id, err_m)
                     quantity -= step_size
                     info('sleeping 5 secs...')
+                    l(self, f"sleeping 5 secs...", chat_id, 'info')
                     time.sleep(5)
                 else:
                     err_m = f"create_test_order ERROR: {e}"
-                    error(err_m)
+                    l(self, err_m, chat_id, 'error')
                     self.send_telegram_message(chat_id, err_m)
                 if quantity <= 0:
                     err_m = f'not enough balance for minimal order: {quantity}'
-                    info(err_m)
+                    l(self, err_m, chat_id, 'warning')
                     self.send_telegram_message(chat_id, err_m)
                     break
 
-        info(f'can_create: {can_create}')
+        l(self, f"can_create: {can_create}", chat_id, 'info')
 
         if can_create:
             # create real order here
             m = f"REAL ORDER ON BINANCE CREATION SHOULD BE HERE, the params: {params}"
-            info(m)
+            l(self, m, chat_id, 'info')
             # todo replace with order's owner's chat_id
             self.send_telegram_message(chat_id, m,)
-            return True
-        return False
+            return {}
+        return None
