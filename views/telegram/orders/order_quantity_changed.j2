@@ -1,3 +1,3 @@
 Order #{{ db_order.binance_order_id }} qty changes:
-executedQty: '{{ to_eng_string(old_executed_quantity) }}' -> '<b>{{ to_eng_string(db_order.executed_quantity) }}</b>',
-cummulativeQuoteQty '{{ to_eng_string(old_cummulative_quote_quantity) }}' -> '<b>{{ to_eng_string(db_order.cummulative_quote_quantity) }}</b>'
+executedQty: '{{ format(old_executed_quantity, 'f') }}' -> '<b>{{ format(db_order.executed_quantity, 'f') }}</b>',
+cummulativeQuoteQty '{{ format(old_cummulative_quote_quantity, 'f') }}' -> '<b>{{ format(db_order.cummulative_quote_quantity, 'f') }}</b>'

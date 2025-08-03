@@ -4,7 +4,7 @@
 Side: {{ remap_db_order_side(db_order.side) }}
 Symbol: {{ remap_db_order_symbol(db_order.symbol) }}
 Price: {{ dec_to_str(decimal(db_order.order_price)) }}
-Original qty: {{ to_eng_string(db_order.original_quantity) }}
-Executed qty: {{ to_eng_string(db_order.executed_quantity) }}
-Cummulative quote qty: {{ to_eng_string(db_order.cummulative_quote_quantity) }}
+Original quantity: {{ format(db_order.original_quantity, 'f') }}
+Executed quantity: {{ to_eng_string(db_order.executed_quantity, 'f') }}
+Cummulative quote quantity: {{ to_eng_string(db_order.cummulative_quote_quantity, 'f') }}
 Status: {{ remap_db_order_status(db_order.status) }}
