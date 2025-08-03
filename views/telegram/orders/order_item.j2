@@ -1,8 +1,10 @@
-<code>{{ order.orderId }}</code>
-<b>{{ format_timestamp(order.updateTime / 1000, '%Y-%m-%d %H:%M:%S') }}</b>
-<b>Type: {{ order.type }}</b>
-Side: {{ order.side }}
-Symbol: {{ order.symbol }}
-Price: {{ "%.2f" | format(order.price | float) }}
-Origin qty: {{ order.origQty }}
-Status: {{ order.status }}
+<code>{{ db_order.binance_order_id }}</code>
+<b>{{ format_timestamp(db_order.binance_updated_at / 1000, '%Y-%m-%d %H:%M:%S') }}</b>
+<b>Type: {{ remap_db_order_type(db_order.binance_order_type) }}</b>
+Side: {{ remap_db_order_side(db_order.side) }}
+Symbol: {{ remap_db_order_symbol(db_order.symbol) }}
+Price: {{ dec_to_str(decimal(db_order.order_price)) }}
+Original qty: {{ to_eng_string(db_order.original_quantity) }}
+Executed qty: {{ to_eng_string(db_order.executed_quantity) }}
+Cummulative quote qty: {{ to_eng_string(db_order.cummulative_quote_quantity) }}
+Status: {{ remap_db_order_status(db_order.status) }}

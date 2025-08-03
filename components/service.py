@@ -2,13 +2,14 @@ import time
 from decimal import Decimal
 from io import BytesIO
 from logging import info, error
+from views.view import View
 
 from peewee import MySQLDatabase
 
 from helpers import current_millis, calculate_order_quantity
 from mappers.balance_mapper import BalanceMapper
 from mappers.order_mapper import OrderMapper
-from models import Balance, Order
+from models import Balance, Order, OrderFillingHistory
 from .binance_raw_client import BinanceRawClientComponent
 from .binance import BinanceComponent
 from .telegram import TelegramComponent
@@ -20,20 +21,23 @@ class ServiceComponent:
             binance_raw_client_component: BinanceRawClientComponent,
             telegram_component: TelegramComponent,
             db: MySQLDatabase,
+            view: View,
     ):
         super().__init__()
         self.binance_component = binance_component
         self.binance_raw_client_component = binance_raw_client_component
         self.telegram_component = telegram_component
         self.db = db
+        self.view = view
 
     @classmethod
-    def create(cls, config: dict, db: MySQLDatabase):
+    def create(cls, config: dict, db: MySQLDatabase, view: View):
         return cls(
             binance_component=BinanceComponent.create(config["binance"]),
             binance_raw_client_component=BinanceRawClientComponent.create(config["binance"]),
             telegram_component=TelegramComponent.create(config["telegram"]),
             db=db,
+            view=view,
         )
 
     def check_telegram_bot_api_secret_token(self, bot_api_secret_token: str) -> bool:
@@ -129,10 +133,78 @@ class ServiceComponent:
                     error(f"Cannot save balance record: {balance_db.as_dict()}")
         return saved_count
 
+    def notify_order_created(self, chat_id: int, db_order: Order):
+        message = self.view.render('telegram/orders/order_created.j2', {
+            'order': db_order,
+        })
+        self.send_telegram_message(chat_id, message)
+
+    def write_orders_filling_history(self, binance_order: dict, db_order_id: int, logged_at: int) -> int|None:
+        order_filling_history = OrderFillingHistory().fill_from_binance(binance_order)
+        order_filling_history.order_id = db_order_id
+        order_filling_history.logged_at = logged_at
+        if not order_filling_history.save():
+            return None
+        return order_filling_history.id
+
+    def show_orders(self, db_orders: [Order], chat_id: int):
+        message = self.view.render('telegram/orders/orders_list.j2', {
+            'db_orders': db_orders,
+        })
+        self.send_telegram_message(chat_id, message)
+
+    def show_order_status(self, db_order: Order, chat_id: int):
+        message = self.view.render('telegram/orders/order_item.j2', {
+            'db_order': db_order,
+        })
+        self.send_telegram_message(chat_id, message)
+
+    def notify_order_status_changed(self, db_order: Order, previous_status: int, chat_id: int):
+        # send telegram notification
+        message = self.view.render('telegram/orders/order_status_changed.j2', {
+            'db_order': db_order,
+            'previous_status': previous_status,
+        })
+        keys = [
+            f"show_order_status:{db_order.binance_order_id}",
+        ]
+        inline_keyboard: list = []
+        for key in keys:
+            inline_keyboard.append([{"text": key, "callback_data": key}, ])
+        self.send_telegram_message(chat_id, message, inline_keyboard)
+        self.send_telegram_message(chat_id, self.view.render(
+            'telegram/or_choose_another_option.j2', {}
+        ))
+
+    def notify_order_quantity_changed(self, db_order: Order, old_executed_quantity: int, old_cummulative_quote_quantity: int, chat_id: int):
+        message = self.view.render('telegram/orders/order_quantity_changed.j2', {
+            'db_order': db_order,
+            'old_executed_quantity': old_executed_quantity,
+            'old_cummulative_quote_quantity': old_cummulative_quote_quantity,
+        })
+        keys = [
+            f"show_order_status:{db_order.binance_order_id}",
+        ]
+        inline_keyboard: list = []
+        for key in keys:
+            inline_keyboard.append([{"text": key, "callback_data": key}, ])
+        self.send_telegram_message(chat_id, message, inline_keyboard)
+        self.send_telegram_message(chat_id, self.view.render(
+            'telegram/or_choose_another_option.j2', {}))
+
     def create_or_update_db_order(self, binance_order: dict):
         db_order = Order().fill_from_binance(binance_order)
         db_order.upsert()
         return db_order
+
+    def get_all_db_orders_indexed(self) -> dict[int, Order]:
+        all_db_orders = Order.select()
+        all_db_orders_indexed: dict[int, Order] = {}
+        for db_order in all_db_orders:
+            all_db_orders_indexed[db_order.binance_order_id] = db_order
+        del all_db_orders
+        return all_db_orders_indexed
+
 
     def create_order_on_binance(self, chat_id: int, str_price:str = None, db_symbol:int=None, db_side:int=None,) -> None|dict:
 

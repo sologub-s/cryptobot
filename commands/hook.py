@@ -56,10 +56,9 @@ class HookCommand(AbstractCommand):
             elif text.lower().startswith("show_order_status:"):
                 text = text.replace(" ", "")
                 binance_order_id = text.split(":")[1]
-                binance_symbol = text.split(":")[2].upper()
 
                 command = (ShowOrderStatusCommand()
-                           .set_payload(binance_order_id, binance_symbol, chat_id)
+                           .set_payload(binance_order_id=binance_order_id, chat_id=chat_id,)
                            .set_deps(self._service_component, self._view)
                            )
                 command.execute()

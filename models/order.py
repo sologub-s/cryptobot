@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from peewee import (
     MySQLDatabase, Model, BigIntegerField, DecimalField, AutoField, SmallIntegerField, DatabaseProxy
 )
@@ -87,9 +89,9 @@ class Order(BaseModel):
         self.binance_updated_at = int(data.get("updateTime", 0))
         self.symbol = OrderMapper.map_symbol(data.get("symbol"))
         self.side = OrderMapper.map_side(data.get("side"))
-        self.order_price = float(data.get("price", 0) or 0)
-        self.original_quantity = float(data.get("origQty", 0) or 0)
-        self.executed_quantity = float(data.get("executedQty", 0) or 0)
-        self.cummulative_quote_quantity = float(data.get("cummulativeQuoteQty", 0) or 0)
+        self.order_price = Decimal(data.get("price", 0) or 0)
+        self.original_quantity = Decimal(data.get("origQty", 0) or 0)
+        self.executed_quantity = Decimal(data.get("executedQty", 0) or 0)
+        self.cummulative_quote_quantity = Decimal(data.get("cummulativeQuoteQty", 0) or 0)
         self.status = OrderMapper.map_status(data.get("status"))
         return self

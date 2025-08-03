@@ -44,12 +44,14 @@ def main():
     if not db.connect():
         print(f'ERROR: Cannot connect to database {config["db"]["host"]}')
 
+    view = View(environment, default_vars)
+
     di = { # fuck that Python...
         'config': config,
-        'view': View(environment, default_vars),
+        'view': view,
         'plt': plt,
         'db': db,
-        'service_component': ServiceComponent.create(config, db),
+        'service_component': ServiceComponent.create(config, db, view),
     }
 
     # commands dispatching

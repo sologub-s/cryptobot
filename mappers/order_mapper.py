@@ -30,6 +30,17 @@ class OrderMapper:
     TYPE_TAKE_PROFIT_LIMIT = 6
     TYPE_LIMIT_MAKER = 7
 
+    type_mapping = {
+        'UNKNOWN': TYPE_UNKNOWN,
+        'LIMIT': TYPE_LIMIT,
+        'MARKET': TYPE_MARKET,
+        'STOP_LOSS': TYPE_STOP_LOSS,
+        'STOP_LOSS_LIMIT': TYPE_STOP_LOSS_LIMIT,
+        'TAKE_PROFIT': TYPE_TAKE_PROFIT,
+        'TAKE_PROFIT_LIMIT': TYPE_TAKE_PROFIT_LIMIT,
+        'TAKE_LIMIT_MAKER': TYPE_LIMIT_MAKER,
+    }
+
     status_mapping = {
             "UNKNOWN": STATUS_UNKNOWN,
             "NEW": STATUS_NEW,
@@ -93,6 +104,13 @@ class OrderMapper:
         return cls.status_mapping.get(status, cls.STATUS_UNKNOWN)
 
     @classmethod
+    def remap_status(cls, status: int) -> str|None:
+        for binance_status in cls.status_mapping:
+            if cls.status_mapping[binance_status] == status:
+                return binance_status
+        return None
+
+    @classmethod
     def map_type(cls, type: str) -> int:
         if not type:
             return cls.TYPE_UNKNOWN
@@ -107,3 +125,10 @@ class OrderMapper:
             "LIMIT_MAKER": cls.TYPE_LIMIT_MAKER,
         }
         return mapping.get(type, cls.TYPE_UNKNOWN)
+
+    @classmethod
+    def remap_type(cls, type: int) -> str|None:
+        for binance_type in cls.type_mapping:
+            if cls.type_mapping[binance_type] == type:
+                return binance_type
+        return None

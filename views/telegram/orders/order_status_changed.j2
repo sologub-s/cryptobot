@@ -1,1 +1,2 @@
-Order #{{ order['orderId'] }} status changed from '{{ previous_status }}' to: '<b>{{ order['status'] }}</b>'
+Order's <code>{{ db_order.binance_order_id }}</code> status changed:
+'{{ remap_db_order_status(previous_status) }}' -> '<b>{{ remap_db_order_status(db_order.status) }}</b>'

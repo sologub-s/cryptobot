@@ -20,9 +20,8 @@ def dispatch(di: dict, args) -> None | tuple[None, type[ShowOrdersCommand]] | tu
             None,
             ShowOrderStatusCommand()
                 .set_payload(
-                    args.binance_order_id,
-                    args.binance_symbol,
-                    args.chat_id,
+                    binance_order_id=args.binance_order_id,
+                    chat_id=args.chat_id,
                 )
                 .set_deps(di['service_component'], di['view'])
         )
@@ -116,7 +115,7 @@ def parse_args(cli_name: str):
     # show_order_status
     parser_status = subparsers.add_parser("show_order_status", help="Show order status")
     parser_status.add_argument("--binance_order_id", type=int, help="Order ID")
-    parser_status.add_argument("--binance_symbol", default="ETHUSDT", help="Trading pair (symbol)")
+    #parser_status.add_argument("--binance_symbol", default="ETHUSDT", help="Trading pair (symbol)")
     parser_status.add_argument("--chat_id", type=int, help="Telegram chat id")
 
     # show_price

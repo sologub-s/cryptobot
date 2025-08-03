@@ -53,7 +53,7 @@ class TelegramComponent:
             del reply_markup["keyboard"]
             reply_markup['inline_keyboard'] = inline_keyboard
 
-        print(json.dumps(reply_markup, indent=4))
+        #print(json.dumps(reply_markup, indent=4))
 
         data = {
             "chat_id": chat_id,
