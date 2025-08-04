@@ -43,9 +43,9 @@ class MiscCommand(AbstractCommand):
 
     def execute(self):
         print('Misc...')
-        l(self._service_component, f"hello world from info !", self._config['telegram']['chat_id'], 'info')
-        l(self._service_component, f"hello world from warning !", self._config['telegram']['chat_id'], 'warning')
-        l(self._service_component, f"hello world from error !", self._config['telegram']['chat_id'], 'error')
+        l(self._service_component, f"hello world from info !", 'info', self._config['telegram']['chat_id'])
+        l(self._service_component, f"hello world from warning !", 'warning', self._config['telegram']['chat_id'])
+        l(self._service_component, f"hello world from error !", 'error', self._config['telegram']['chat_id'])
         return True
 
     def test_create_order(self):

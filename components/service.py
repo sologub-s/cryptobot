@@ -208,32 +208,32 @@ class ServiceComponent:
 
     def create_order_on_binance(self, chat_id: int, str_price:str = None, db_symbol:int=None, db_side:int=None,) -> None|dict:
 
-        l(self, f"!!! PREPARING TO CREATE ORDER ON BINANCE !!!", chat_id, 'info')
+        l(self, f"!!! PREPARING TO CREATE ORDER ON BINANCE !!!", 'info', chat_id)
 
         if not str_price:
-            l(self, f"Cannot create order on Binance - str_price not set", chat_id, 'error')
+            l(self, f"Cannot create order on Binance - str_price not set", 'error', chat_id)
             return None
         else:
             #price: Decimal = Decimal('3600.00')
             price = Decimal(str_price)
 
         if not db_symbol:
-            l(self, f"Cannot create order on Binance - db_symbol not set", chat_id, 'error')
+            l(self, f"Cannot create order on Binance - db_symbol not set", 'error', chat_id)
             return None
         else:
             #symbol = 'ETHUSDT'
             symbol = OrderMapper.remap_symbol(db_symbol)
             if not symbol:
-                l(self, f"Cannot create order on Binance - unknown symbol '{db_symbol}'", chat_id, 'error')
+                l(self, f"Cannot create order on Binance - unknown symbol '{db_symbol}'", 'error', chat_id)
 
         if not db_side:
-            l(self, f"Cannot create order on Binance - db_side not set", chat_id, 'error')
+            l(self, f"Cannot create order on Binance - db_side not set", 'error', chat_id)
             return None
         else:
             #side = 'BUY'
             side = OrderMapper.remap_side(db_side)
             if not side:
-                l(self, f"Cannot create order on Binance - unknown side '{db_side}'", chat_id, 'error')
+                l(self, f"Cannot create order on Binance - unknown side '{db_side}'", 'error', chat_id)
 
         symbol_info = self.binance_component.get_symbol_info(symbol)
         if side == 'BUY':
@@ -254,24 +254,24 @@ class ServiceComponent:
             elif f["filterType"] == "MIN_NOTIONAL":
                 min_notional = Decimal(f["minNotional"])
 
-        l(self, f"asset_to_sell: {asset_to_sell}", chat_id, 'info')
-        l(self, f"step_size: {step_size}", chat_id, 'info')
-        l(self, f"min_qty: {min_qty}", chat_id, 'info')
-        l(self, f"max_qty: {max_qty}", chat_id, 'info')
-        l(self, f"min_notional: {min_notional}", chat_id, 'info')
+        l(self, f"asset_to_sell: {asset_to_sell}", 'info', chat_id)
+        l(self, f"step_size: {step_size}", 'info', chat_id)
+        l(self, f"min_qty: {min_qty}", 'info', chat_id)
+        l(self, f"max_qty: {max_qty}", 'info', chat_id)
+        l(self, f"min_notional: {min_notional}", 'info', chat_id)
 
         binance_balance = self.get_asset_balance(asset_to_sell)
-        l(self, f"binance_balance: {binance_balance}", chat_id, 'info')
+        l(self, f"binance_balance: {binance_balance}", 'info', chat_id)
         actual_balance = Decimal(binance_balance['free'])
-        l(self, f"actual_balance: {actual_balance}", chat_id, 'info')
+        l(self, f"actual_balance: {actual_balance}", 'info', chat_id)
 
         quantity = calculate_order_quantity(actual_balance, price, step_size, side)
-        l(self, f"quantity: {quantity}", chat_id, 'info')
+        l(self, f"quantity: {quantity}", 'info', chat_id)
 
         can_create = False
         tries = 0
         while not can_create and tries <= 10:
-            l(self, f"trying to create test order...", chat_id, 'info')
+            l(self, f"trying to create test order...", 'info', chat_id)
             tries += 1
             try:
                 params: dict = {
@@ -282,36 +282,36 @@ class ServiceComponent:
                     'quantity': str(quantity),
                     'price': str(price),
                 }
-                l(self, f"attempt #{tries} to create test order on binance with the following params: {params}...", chat_id, 'info')
+                l(self, f"attempt #{tries} to create test order on binance with the following params: {params}...", 'info', chat_id)
                 result = self.binance_component.create_test_order(**params)
-                l(self, f"create_test_order() result: {result}", chat_id, 'info')
+                l(self, f"create_test_order() result: {result}", 'info', chat_id)
                 can_create = True
             except Exception as e:
-                l(self, str(e.__dict__), chat_id, 'error')
+                l(self, str(e.__dict__), 'error', chat_id)
                 if 'LOT_SIZE' in e.__dict__['message']:
                     err_m = f"buy_qty '{quantity}' is too big (cannot pass LOT_SIZE validation, decreasing by step_size '{step_size}')"
-                    l(self, err_m, chat_id, 'error')
+                    l(self, err_m, 'error', chat_id)
                     self.send_telegram_message(chat_id, err_m)
                     quantity -= step_size
                     info('sleeping 5 secs...')
-                    l(self, f"sleeping 5 secs...", chat_id, 'info')
+                    l(self, f"sleeping 5 secs...", 'info', chat_id)
                     time.sleep(5)
                 else:
                     err_m = f"create_test_order ERROR: {e}"
-                    l(self, err_m, chat_id, 'error')
+                    l(self, err_m, 'error', chat_id)
                     self.send_telegram_message(chat_id, err_m)
                 if quantity <= 0:
                     err_m = f'not enough balance for minimal order: {quantity}'
-                    l(self, err_m, chat_id, 'warning')
+                    l(self, err_m, 'warning', chat_id)
                     self.send_telegram_message(chat_id, err_m)
                     break
 
-        l(self, f"can_create: {can_create}", chat_id, 'info')
+        l(self, f"can_create: {can_create}", 'info', chat_id)
 
         if can_create:
             # create real order here
             m = f"REAL ORDER ON BINANCE CREATION SHOULD BE HERE, the params: {params}"
-            l(self, m, chat_id, 'info')
+            l(self, m, 'info', chat_id)
             # todo replace with order's owner's chat_id
             self.send_telegram_message(chat_id, m,)
             return {}

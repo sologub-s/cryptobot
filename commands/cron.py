@@ -209,7 +209,7 @@ class CronCommand(AbstractCommand):
         return db_order
 
     def proc_place_new_binance_order(self, db_order: Order, chat_id: int):
-        l(self._service_component, f"db_order.id#{db_order.id} status is 'FILLED' ('{db_order.status}')", chat_id, 'info')
+        l(self._service_component, f"db_order.id#{db_order.id} status is 'FILLED' ('{db_order.status}')", 'info', chat_id)
         # creating new order
         l(self._service_component, f"starting to create new binance order...", chat_id,'info')
         order_params: dict = {
@@ -222,10 +222,10 @@ class CronCommand(AbstractCommand):
         if db_order.side == OrderMapper.SIDE_SELL:
             order_params['db_side'] = OrderMapper.SIDE_BUY
             order_params['str_price'] = dec_to_str(decrease_price_percent(Decimal(db_order.order_price), Decimal(5)))
-        l(self._service_component, f"params for new binance order: '{order_params}'", chat_id, 'info')
+        l(self._service_component, f"params for new binance order: '{order_params}'", 'info', chat_id)
 
         new_binance_order: dict = self._service_component.create_order_on_binance(**order_params)
-        l(self._service_component, f"new_binance_order: {new_binance_order}", chat_id, 'info')
+        l(self._service_component, f"new_binance_order: {new_binance_order}", 'info', chat_id)
 
     def handler_notify_working(self):
         message = self._view.render('telegram/up_and_running.j2', {})
