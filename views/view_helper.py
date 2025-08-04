@@ -30,7 +30,7 @@ def to_eng_string(value: Decimal) -> str:
     return value.to_eng_string()
 
 def dec_to_str(value: Decimal) -> str:
-    return money.dec_to_str(value)
+    return money.dec_to_str(Decimal(value))
 
 def get_globals():
     return {
