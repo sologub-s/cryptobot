@@ -39,9 +39,7 @@ class CronCommand(AbstractCommand):
         if not self._initialized:
             print(f"ERROR: Command {self.__class__.__name__} is NOT initialized")
             return False
-        # @TODO remove after debug !!!
-        self.handler_do_orders_updating_routine()
-        return True
+        
         info(f"Cron execution started")
 
         handlers_list = {
