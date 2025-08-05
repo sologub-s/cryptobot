@@ -25,6 +25,13 @@ class ShowOrdersCommand(AbstractCommand):
         if not self._initialized:
             print(f"ERROR: Command {self.__class__.__name__} is NOT initialized")
             return False
-        self._service_component.show_orders(Order.select(), self._payload['chat_id'])
+        statuses: list[int] = [
+            OrderMapper.STATUS_UNKNOWN,
+            OrderMapper.STATUS_PENDING_NEW,
+            OrderMapper.STATUS_NEW,
+            OrderMapper.STATUS_PARTIALLY_FILLED,
+            OrderMapper.STATUS_PENDING_CANCEL,
+        ]
+        self._service_component.show_orders(Order.select().where(Order.status.in_(statuses)), self._payload['chat_id'])
 
         return True

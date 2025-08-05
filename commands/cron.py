@@ -206,6 +206,10 @@ class CronCommand(AbstractCommand):
             previous_status=old_db_order_status,
             chat_id=chat_id,
         )
+        self._service_component.show_order_status(
+            db_order=db_order,
+            chat_id=chat_id,
+        )
         return db_order
 
     def proc_place_new_binance_order(self, db_order: Order, chat_id: int):
