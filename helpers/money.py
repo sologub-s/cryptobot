@@ -37,3 +37,6 @@ def decrease_price_percent(price: Decimal, percent: Decimal) -> Decimal:
 
 def dec_to_str(price: Decimal) -> str:
     return f"{price:.2f}"
+
+def round_price(price: Decimal, tick_size: Decimal) -> Decimal:
+    return price.quantize(tick_size, rounding=ROUND_DOWN)

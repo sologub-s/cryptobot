@@ -2,6 +2,8 @@ import time
 from decimal import Decimal
 from io import BytesIO
 from logging import info, error
+
+from helpers.money import round_price
 from views.view import View
 
 from peewee import MySQLDatabase
@@ -245,6 +247,7 @@ class ServiceComponent:
         min_qty = None
         max_qty = None
         min_notional = None
+        tick_size = None
 
         for f in symbol_info["filters"]:
             if f["filterType"] == "LOT_SIZE":
@@ -253,6 +256,8 @@ class ServiceComponent:
                 max_qty = Decimal(f["maxQty"])
             elif f["filterType"] == "MIN_NOTIONAL":
                 min_notional = Decimal(f["minNotional"])
+            elif f["filterType"] == "PRICE_FILTER":
+                tick_size = Decimal(f["tickSize"])
 
         l(self, f"asset_to_sell: {asset_to_sell}", 'info', chat_id)
         l(self, f"step_size: {step_size}", 'info', chat_id)
@@ -260,12 +265,14 @@ class ServiceComponent:
         l(self, f"max_qty: {max_qty}", 'info', chat_id)
         l(self, f"min_notional: {min_notional}", 'info', chat_id)
 
+        safe_price = round_price(price=price, tick_size=tick_size)
+
         binance_balance = self.get_asset_balance(asset_to_sell)
         l(self, f"binance_balance: {binance_balance}", 'info', chat_id)
         actual_balance = Decimal(binance_balance['free'])
         l(self, f"actual_balance: {actual_balance}", 'info', chat_id)
 
-        quantity = calculate_order_quantity(actual_balance, price, step_size, side)
+        quantity = calculate_order_quantity(actual_balance, safe_price, step_size, side)
         l(self, f"quantity: {quantity}", 'info', chat_id)
 
         can_create = False
@@ -280,7 +287,7 @@ class ServiceComponent:
                     'type': 'LIMIT',
                     'timeInForce': 'GTC',
                     'quantity': str(quantity),
-                    'price': str(price),
+                    'price': str(safe_price),
                 }
                 l(self, f"attempt #{tries} to create test order on binance with the following params: {params}...", 'info', chat_id)
                 result = self.binance_component.create_test_order(**params)
@@ -288,20 +295,32 @@ class ServiceComponent:
                 can_create = True
             except Exception as e:
                 l(self, str(e.__dict__), 'error', chat_id)
-                if 'LOT_SIZE' in e.__dict__['message']:
-                    err_m = f"buy_qty '{quantity}' is too big (cannot pass LOT_SIZE validation, decreasing by step_size '{step_size}')"
+                if 'LOT_SIZE' in str(e):
+                    err_m = f"buy_qty '{quantity}' is too big (cannot pass LOT_SIZE validation, decreasing quantity '{quantity}' by step_size '{step_size}')"
                     l(self, err_m, 'error', chat_id)
                     self.send_telegram_message(chat_id, err_m)
                     quantity -= step_size
                     info('sleeping 5 secs...')
                     l(self, f"sleeping 5 secs...", 'info', chat_id)
                     time.sleep(5)
+                elif 'MIN_NOTIONAL' in str(e):
+                    err_m = f"actual_balance '{actual_balance}' is less then '{min_notional}' (cannot pass MIN_NOTIONAL validation, need more free balance...')"
+                    l(self, err_m, 'error', chat_id)
+                    self.send_telegram_message(chat_id, err_m)
+                elif 'PRICE_FILTER' in str(e):
+                    err_m = f"safe_price '{safe_price}' must be multiple of tick_size '{tick_size}' (cannot pass PRICE_FILTER validation, please fix the price...')"
+                    l(self, err_m, 'error', chat_id)
+                    self.send_telegram_message(chat_id, err_m)
+                elif 'MAX_NUM_ORDERS' in str(e):
+                    err_m = f"too many open orders (cannot pass MAX_NUM_ORDERS validation, please wait or cancel some orders...')"
+                    l(self, err_m, 'error', chat_id)
+                    self.send_telegram_message(chat_id, err_m)
                 else:
                     err_m = f"create_test_order ERROR: {e}"
                     l(self, err_m, 'error', chat_id)
                     self.send_telegram_message(chat_id, err_m)
-                if quantity <= 0:
-                    err_m = f'not enough balance for minimal order: {quantity}'
+                if quantity <= min_qty:
+                    err_m = f"not enough balance for minimal order quantity (requested quantity: '{quantity}', minimal quantity: '{min_qty}')"
                     l(self, err_m, 'warning', chat_id)
                     self.send_telegram_message(chat_id, err_m)
                     break
