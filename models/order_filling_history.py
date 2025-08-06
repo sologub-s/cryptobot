@@ -1,3 +1,5 @@
+from decimal import Decimal
+
 from peewee import (
     MySQLDatabase, Model, BigIntegerField, DecimalField, AutoField, SmallIntegerField, DatabaseProxy
 )
@@ -52,9 +54,9 @@ class OrderFillingHistory(BaseModel):
             "logged_at": self.logged_at,
             "order_id": self.order_id,
             "status": self.status,
-            "original_quantity": float(self.original_quantity) if self.original_quantity else None,
-            "executed_quantity": float(self.executed_quantity) if self.executed_quantity else None,
-            "cummulative_quote_quantity": float(self.cummulative_quote_quantity) if self.cummulative_quote_quantity else None,
+            "original_quantity": Decimal(self.original_quantity) if self.original_quantity else None,
+            "executed_quantity": Decimal(self.executed_quantity) if self.executed_quantity else None,
+            "cummulative_quote_quantity": Decimal(self.cummulative_quote_quantity) if self.cummulative_quote_quantity else None,
         }
 
     # --- from binance ---

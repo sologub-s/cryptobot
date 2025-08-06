@@ -1,3 +1,4 @@
+import html
 import time
 from decimal import Decimal
 from io import BytesIO
@@ -11,7 +12,7 @@ from peewee import MySQLDatabase
 from helpers import current_millis, calculate_order_quantity, l
 from mappers.balance_mapper import BalanceMapper
 from mappers.order_mapper import OrderMapper
-from models import Balance, Order, OrderFillingHistory
+from models import Balance, Order, OrderFillingHistory, OrderTrade
 from .binance_raw_client import BinanceRawClientComponent
 from .binance import BinanceComponent
 from .telegram import TelegramComponent
@@ -92,6 +93,56 @@ class ServiceComponent:
 
     def get_asset_balance(self, asset=None):
         return self.binance_component.get_asset_balance(asset)
+
+    def get_all_trades(self, binance_symbol: str) -> list[dict]:
+        return self.binance_raw_client_component.get_all_trades(binance_symbol=binance_symbol)
+
+    def upsert_binance_trades(self, trades: list[dict]) -> list[int]:
+        if len(trades) == 0:
+            return []
+        inserted_trades: list[int] = []
+
+        binance_orders_ids = []
+        for trade in trades:
+            binance_orders_ids.append(trade['orderId'])
+
+        db_orders = Order.select().where(Order.binance_order_id.in_(binance_orders_ids))
+        db_orders_indexed = {}
+        for db_order in db_orders:
+            db_orders_indexed[db_order.binance_order_id] = db_order
+        db_orders = db_orders_indexed.copy()
+        del db_orders_indexed
+
+        for trade in trades:
+            db_order_trade = OrderTrade().fill_from_binance(trade)
+            db_order_trade.order_id = db_orders[trade['orderId']].id
+            id = OrderTrade.insert(db_order_trade.__data__).on_conflict(
+                preserve=[
+                    OrderTrade.id,
+                    OrderTrade.created_at,
+                ],
+            ).execute()
+            if id is not None:
+                inserted_trades.append(id)
+
+        return inserted_trades
+
+    def update_trades_from_binance_to_db(self, order_id: int = None):
+        if not order_id:
+            m_err = "order_id must be present"
+            l(self, m_err)
+            raise ValueError(m_err)
+        db_order: Order = Order.select().where(Order.id == order_id).first()
+        if not db_order:
+            m_err = f"db_order with id: '{order_id}' not found"
+            l(self, m_err)
+            raise Exception(m_err)
+        all_trades = self.binance_raw_client_component.get_all_trades(
+            binance_symbol=OrderMapper.remap_symbol(db_order.symbol),
+        )
+        for trade in all_trades:
+            if trade['orderId'] == db_order.binance_order_id:
+                self.upsert_binance_trades([trade])
 
     def update_assets_from_binance_to_db(self, assets: list=None, force_insert=False):
         if assets is None:
@@ -291,12 +342,12 @@ class ServiceComponent:
                 }
                 l(self, f"attempt #{tries} to create test order on binance with the following params: {params}...", 'info', chat_id)
                 result = self.binance_component.create_test_order(**params)
-                l(self, f"create_test_order() result: {result}", 'info', chat_id)
+                l(self, f"create_test_order() result: <pre>{result}</pre>", 'info', chat_id)
                 can_create = True
             except Exception as e:
-                l(self, str(e.__dict__), 'error', chat_id)
+                l(self, str(e), 'error', chat_id)
                 if 'LOT_SIZE' in str(e):
-                    err_m = f"buy_qty '{quantity}' is too big (cannot pass LOT_SIZE validation, decreasing quantity '{quantity}' by step_size '{step_size}')"
+                    err_m = f"buy_qty '{quantity}' is too big or too small (cannot pass LOT_SIZE validation, decreasing quantity '{quantity}' by step_size '{step_size}')"
                     l(self, err_m, 'error', chat_id)
                     self.send_telegram_message(chat_id, err_m)
                     quantity -= step_size

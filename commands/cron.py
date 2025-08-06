@@ -59,6 +59,9 @@ class CronCommand(AbstractCommand):
                 .execute()
         )
 
+        #self.handler_do_orders_updating_routine()
+        #return True
+
         for cron_job_to_execute in cron_jobs_to_execute:
             handler_name: str = cron_job_to_execute.name
             if handler_name not in handlers_list:
@@ -123,6 +126,18 @@ class CronCommand(AbstractCommand):
                     mapped_binance_order_status=mapped_binance_order_status,
                     chat_id=self._payload["chat_id"],
                 )
+
+                # if status has changed and the new status is in [CANCELLED, PARTIALLY_FILLED, FILLED]
+                if db_order.status in [
+                    OrderMapper.STATUS_CANCELED,
+                    OrderMapper.STATUS_PARTIALLY_FILLED,
+                    OrderMapper.STATUS_FILLED,
+                ]:
+                    # load and upsert trades for the db_order
+                    self._service_component.update_trades_from_binance_to_db(order_id=db_order.id, )
+                    db_order.trades_checked = True
+                    db_order.save()
+                    info(f"db_order.id#{db_order.id} trades_checked: '{db_order.trades_checked}'")
 
                 # if status has changed and the new status is FILLED then place new order
                 if db_order.status == OrderMapper.STATUS_FILLED:
@@ -192,14 +207,17 @@ class CronCommand(AbstractCommand):
         # save new status to db
         # previous_status: str = find_first_key_by_value(OrderMapper.status_mapping, db_order.status, 'UNKNOWN')
         db_order.status = mapped_binance_order_status
+        db_order.trades_checked = False
         db_order.save()
         info(f"db_order.id#{db_order.id} status: '{db_order.status}'")
+        info(f"db_order.id#{db_order.id} trades_checked: '{db_order.trades_checked}'")
         # update assets balances
         sleep(1)
         self._service_component.update_assets_from_binance_to_db(
             assets=BalanceMapper.get_assets().keys(),
             force_insert=True,
         )
+
         # notify about order's status change
         self._service_component.notify_order_status_changed(
             db_order=db_order,
@@ -215,7 +233,7 @@ class CronCommand(AbstractCommand):
     def proc_place_new_binance_order(self, db_order: Order, chat_id: int):
         l(self._service_component, f"db_order.id#{db_order.id} status is 'FILLED' ('{db_order.status}')", 'info', chat_id)
         # creating new order
-        l(self._service_component, f"starting to create new binance order...", chat_id,'info')
+        l(self._service_component, f"starting to create new binance order...", 'info', chat_id)
         order_params: dict = {
             'chat_id': chat_id,
             'db_symbol': db_order.symbol,

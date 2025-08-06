@@ -40,3 +40,6 @@ def dec_to_str(price: Decimal) -> str:
 
 def round_price(price: Decimal, tick_size: Decimal) -> Decimal:
     return price.quantize(tick_size, rounding=ROUND_DOWN)
+
+def trim_trailing_zeros(d: Decimal) -> str:
+    return format(d.normalize(), 'f').rstrip('0').rstrip('.') if '.' in str(d) else str(d)

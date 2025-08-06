@@ -2,7 +2,8 @@ import time
 import hmac
 import hashlib
 import logging
-from logging import error, info
+from logging import error, info, warn
+
 logging.basicConfig(level=logging.INFO)
 
 import requests
@@ -33,6 +34,8 @@ class BinanceRawClientComponent:
         return signature
 
     def _request(self, endpoint: str, params: dict):
+        # dict is mutable !!!
+        params = params.copy()
         # Adding signature
         params["recvWindow"] = 60000
         params["timestamp"] = int(time.time() * 1000)
@@ -57,6 +60,32 @@ class BinanceRawClientComponent:
                 json_response = '{"empty_response": true}'
             info(f"Success! Response: '{json_response}'")
         return json_response
+
+    def get_all_trades(self, binance_symbol: str) -> list[dict]:
+        # Params
+        params = {
+            "symbol": binance_symbol,
+            "limit": 1000,
+            "fromId": 0,
+        }
+
+        result_list = []
+        tries = 0
+
+        while True and tries < 1000:
+            tries += 1
+            partial_list = self._request(endpoint="/api/v3/myTrades", params=params)
+            for trade in partial_list:
+                if int(trade['id']) > params['fromId']:
+                    params['fromId'] = int(trade['id'])
+            params['fromId'] += 1
+            result_list += partial_list
+            if len(partial_list) == 0:
+                break
+            if tries == 1000:
+                error(f"max load myTrades tries: '{tries}'")
+
+        return result_list
 
     """
     Get internal transfers history (Spot-to-Funding and vise-versa).

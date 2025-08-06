@@ -21,6 +21,7 @@ class Order(BaseModel):
     cummulative_quote_quantity = DecimalField(max_digits=20, decimal_places=10, auto_round=True)
     status = SmallIntegerField(default=OrderMapper.STATUS_UNKNOWN)
     created_by_bot = SmallIntegerField(default=0)
+    trades_checked = SmallIntegerField(default=0)
 
     class Meta:
         table_name = 'orders'
@@ -72,12 +73,13 @@ class Order(BaseModel):
             "binance_updated_at": self.binance_updated_at,
             "symbol": self.symbol,
             "side": self.side,
-            "order_price": float(self.order_price) if self.order_price else None,
-            "original_quantity": float(self.original_quantity) if self.original_quantity else None,
-            "executed_quantity": float(self.executed_quantity) if self.executed_quantity else None,
-            "cummulative_quote_quantity": float(self.cummulative_quote_quantity) if self.cummulative_quote_quantity else None,
+            "order_price": Decimal(self.order_price) if self.order_price else None,
+            "original_quantity": Decimal(self.original_quantity) if self.original_quantity else None,
+            "executed_quantity": Decimal(self.executed_quantity) if self.executed_quantity else None,
+            "cummulative_quote_quantity": Decimal(self.cummulative_quote_quantity) if self.cummulative_quote_quantity else None,
             "status": self.status,
             "created_by_bot": bool(self.created_by_bot),
+            "trades_checked": bool(self.trades_checked),
         }
 
     # --- from binance ---

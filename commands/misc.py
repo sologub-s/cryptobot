@@ -43,6 +43,13 @@ class MiscCommand(AbstractCommand):
 
     def execute(self):
         print('Misc...')
+        trades = self._service_component.get_all_trades('ETHUSDT')
+        print(trades)
+        inserted_trades = self._service_component.upsert_binance_trades(trades)
+        print(inserted_trades)
+        return True
+
+    def test_l(self):
         l(self._service_component, f"hello world from info !", 'info', self._config['telegram']['chat_id'])
         l(self._service_component, f"hello world from warning !", 'warning', self._config['telegram']['chat_id'])
         l(self._service_component, f"hello world from error !", 'error', self._config['telegram']['chat_id'])
