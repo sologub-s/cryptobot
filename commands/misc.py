@@ -44,6 +44,11 @@ class MiscCommand(AbstractCommand):
 
     def execute(self):
         print('Misc...')
+
+        return True
+
+    def test_calculate_order_quatity(self):
+        print('Misc...')
         safe_price = Decimal('3780.0')
 
         #actual_balance = Decimal('0.00809190')
