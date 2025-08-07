@@ -127,22 +127,38 @@ class ServiceComponent:
 
         return inserted_trades
 
-    def update_trades_from_binance_to_db(self, order_id: int = None):
-        if not order_id:
-            m_err = "order_id must be present"
-            l(self, m_err)
-            raise ValueError(m_err)
-        db_order: Order = Order.select().where(Order.id == order_id).first()
-        if not db_order:
-            m_err = f"db_order with id: '{order_id}' not found"
+    def update_trades_from_binance_to_db(self, order_ids=None):
+        if order_ids is None:
+            order_ids = []
+        order_ids = list(set(order_ids))
+        if len(order_ids) == 0:
+            m_err = "order_ids is empty, doing nothing..."
+            l(self, m_err, 'info')
+            return []
+        db_orders: list[Order] = Order.select().where(Order.id.in_(order_ids))
+        if len(db_orders) == 0:
+            m_err = f"db_orders with ids: '{order_ids}' not found"
             l(self, m_err)
             raise Exception(m_err)
-        all_trades = self.binance_raw_client_component.get_all_trades(
-            binance_symbol=OrderMapper.remap_symbol(db_order.symbol),
-        )
+        all_binance_symbols = []
+        all_orders_binance_order_ids = []
+        for db_order in db_orders:
+            if db_order.symbol == OrderMapper.SYMBOL_UNKNOWN:
+                continue
+            all_binance_symbols.append(OrderMapper.remap_symbol(db_order.symbol))
+            all_orders_binance_order_ids.append(db_order.binance_order_id)
+        all_trades = []
+        for binance_symbol in all_binance_symbols:
+            all_trades += self.binance_raw_client_component.get_all_trades(
+                binance_symbol=binance_symbol,
+            )
+
+        upserted_trades_ids: list[int] = []
+
         for trade in all_trades:
-            if trade['orderId'] == db_order.binance_order_id:
-                self.upsert_binance_trades([trade])
+            if trade['orderId'] in all_orders_binance_order_ids:
+                upserted_trades_ids += self.upsert_binance_trades([trade])
+        return upserted_trades_ids
 
     def update_assets_from_binance_to_db(self, assets: list=None, force_insert=False):
         if assets is None:

@@ -47,6 +47,7 @@ class CronCommand(AbstractCommand):
             'do-orders-updating-routine': self.handler_do_orders_updating_routine,
             'notify-working': self.handler_notify_working,
             'check-balance-from-binance': self.handler_check_balance_from_binance,
+            'update-trades-for-partially-filled-orders': self.handler_update_trades_for_partially_filled_orders,
         }
 
         cron_jobs_to_execute = list(
@@ -60,6 +61,7 @@ class CronCommand(AbstractCommand):
         )
 
         #self.handler_do_orders_updating_routine()
+        #self.handler_update_trades_for_partially_filled_orders()
         #return True
 
         for cron_job_to_execute in cron_jobs_to_execute:
@@ -134,7 +136,7 @@ class CronCommand(AbstractCommand):
                     OrderMapper.STATUS_FILLED,
                 ]:
                     # load and upsert trades for the db_order
-                    self._service_component.update_trades_from_binance_to_db(order_id=db_order.id, )
+                    self._service_component.update_trades_from_binance_to_db(order_ids=[db_order.id],)
                     db_order.trades_checked = True
                     db_order.save()
                     info(f"db_order.id#{db_order.id} trades_checked: '{db_order.trades_checked}'")
@@ -263,4 +265,19 @@ class CronCommand(AbstractCommand):
         info(f"Assets updated from Binance to db: '{assets_updated}'")
 
         return True
+
+    def handler_update_trades_for_partially_filled_orders(self):
+        l(self, f"handler_update_trades_for_partially_filled_orders: working...", 'info')
+        db_orders = Order.select().where(Order.status == OrderMapper.STATUS_PARTIALLY_FILLED)
+        db_order_ids: list[int] = []
+        for db_order in db_orders:
+            db_order_ids.append(db_order.id)
+        l(self, f"handler_update_trades_for_partially_filled_orders: loaded order ids: {db_order_ids}", 'info')
+        updated_trades = self._service_component.update_trades_from_binance_to_db(
+            order_ids=db_order_ids,
+        )
+        if len(updated_trades) > 0:
+            l(self, f"handler_update_trades_for_partially_filled_orders: updated trades: '{updated_trades}' (total: '{len(updated_trades)}')", 'info')
+        return True
+
 
