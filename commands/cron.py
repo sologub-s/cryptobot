@@ -249,7 +249,7 @@ class CronCommand(AbstractCommand):
         l(self._service_component, f"params for new binance order: '{order_params}'", 'info', chat_id)
 
         new_binance_order: dict = self._service_component.create_order_on_binance(**order_params)
-        l(self._service_component, f"new_binance_order: {new_binance_order}", 'info', chat_id)
+        l(self._service_component, f"new_binance_order binance_order dict: {new_binance_order}", 'info', chat_id)
 
     def handler_notify_working(self):
         message = self._view.render('telegram/up_and_running.j2', {})

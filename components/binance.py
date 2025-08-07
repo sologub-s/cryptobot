@@ -91,3 +91,6 @@ class BinanceComponent:
 
     def create_test_order(self, **params):
         return self.binance_client.create_test_order(**params)
+
+    def create_order(self, **params):
+        return self.binance_client.create_order(**params)

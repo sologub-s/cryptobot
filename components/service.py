@@ -412,9 +412,11 @@ class ServiceComponent:
 
         if can_create:
             # create real order here
-            m = f"REAL ORDER ON BINANCE CREATION SHOULD BE HERE, the params: {params}"
+            m = f"creation of REAL ORDER ON BINANCE, the params: {params}"
             l(self, m, 'info', chat_id)
             # todo replace with order's owner's chat_id
             self.send_telegram_message(chat_id, m,)
-            return {}
+            real_result = self.binance_component.create_order(**params)
+            l(self, f"create_order() result: {real_result}", 'info', chat_id)
+            return real_result
         return None
