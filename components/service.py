@@ -261,7 +261,7 @@ class ServiceComponent:
 
     def create_order_on_binance(self, chat_id: int, str_price:str = None, db_symbol:int=None, db_side:int=None,) -> None|dict:
 
-        l(self, f"!!! PREPARING TO CREATE ORDER ON BINANCE !!!", 'info', chat_id)
+        l(self, f"!!! PREPARING TO CREATE AN ORDER ON BINANCE !!!", 'info', chat_id)
 
         if not str_price:
             l(self, f"Cannot create order on Binance - str_price not set", 'error', chat_id)
@@ -300,6 +300,8 @@ class ServiceComponent:
         min_notional = None
         tick_size = None
 
+        l(self, f"symbol_info['filters']: {symbol_info['filters']}", 'info', chat_id)
+
         for f in symbol_info["filters"]:
             if f["filterType"] == "LOT_SIZE":
                 step_size = Decimal(f["stepSize"])
@@ -315,16 +317,30 @@ class ServiceComponent:
         l(self, f"min_qty: {min_qty}", 'info', chat_id)
         l(self, f"max_qty: {max_qty}", 'info', chat_id)
         l(self, f"min_notional: {min_notional}", 'info', chat_id)
+        l(self, f"tick_size: {tick_size}", 'info', chat_id)
 
         safe_price = round_price(price=price, tick_size=tick_size)
 
         binance_balance = self.get_asset_balance(asset_to_sell)
         l(self, f"binance_balance: {binance_balance}", 'info', chat_id)
         actual_balance = Decimal(binance_balance['free'])
+        #actual_balance = Decimal('0.00809190') # @TODO REMOVE !!!
         l(self, f"actual_balance: {actual_balance}", 'info', chat_id)
 
-        quantity = calculate_order_quantity(actual_balance, safe_price, step_size, side)
+        quantity = calculate_order_quantity(
+            balance=actual_balance,
+            price=safe_price,
+            step_size=step_size,
+            side=side,
+            min_qty=min_qty,
+        )
         l(self, f"quantity: {quantity}", 'info', chat_id)
+
+        if quantity == 0:
+            err_m = f"prepared quantity is '{quantity}' - there is no sense even to try to create an order..."
+            l(self, err_m, 'warning', chat_id)
+            self.send_telegram_message(chat_id, err_m)
+            return None
 
         can_create = False
         tries = 0
@@ -342,7 +358,7 @@ class ServiceComponent:
                 }
                 l(self, f"attempt #{tries} to create test order on binance with the following params: {params}...", 'info', chat_id)
                 result = self.binance_component.create_test_order(**params)
-                l(self, f"create_test_order() result: <pre>{result}</pre>", 'info', chat_id)
+                l(self, f"create_test_order() result: {result}", 'info', chat_id)
                 can_create = True
             except Exception as e:
                 l(self, str(e), 'error', chat_id)

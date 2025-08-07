@@ -11,4 +11,4 @@ def l(sc, message: str, level: str = 'error', chat_id: int = None):
     else:
         info(message)
     if chat_id is not None:
-        sc.send_telegram_message(chat_id=chat_id, message=message)
+        sc.send_telegram_message(chat_id=chat_id, message=f"<pre>{message}</pre>")

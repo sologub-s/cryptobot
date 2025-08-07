@@ -4,16 +4,16 @@ def calculate_order_quantity(
     balance: Decimal,
     price: Decimal,
     step_size: Decimal,
-    side: str
+    side: str,
+    min_qty: Decimal = None
 ) -> Decimal:
     """
-    Calculates quantity for a LIMIT order, rounded down to step size.
+    Calculates a quantity that is:
+    - correctly rounded down to step_size
+    - ≥ min_qty (if provided)
+    - suitable for Binance LOT_SIZE filter
 
-    :param balance: available balance (USDT for BUY, ETH for SELL)
-    :param price: current price of the asset (ETH/USDT)
-    :param step_size: minimum quantity increment (step size for ETH)
-    :param side: "BUY" or "SELL"
-    :return: valid order quantity rounded down
+    Returns Decimal('0') if balance is too low.
     """
     if side.upper() == "BUY":
         raw_qty = balance / price
@@ -22,10 +22,13 @@ def calculate_order_quantity(
     else:
         raise ValueError("Side must be 'BUY' or 'SELL'")
 
-    # Calculate precision from step_size (e.g., 0.001 → 3)
-    quantized_qty = raw_qty.quantize(step_size, rounding=ROUND_DOWN)
+    quantized_qty = (raw_qty // step_size) * step_size
+
+    if min_qty is not None and quantized_qty < min_qty:
+        return Decimal('0')
 
     return quantized_qty
+
 
 def increase_price_percent(price: Decimal, percent: Decimal) -> Decimal:
     price += (price / 100 * percent)
@@ -39,7 +42,7 @@ def dec_to_str(price: Decimal) -> str:
     return f"{price:.2f}"
 
 def round_price(price: Decimal, tick_size: Decimal) -> Decimal:
-    return price.quantize(tick_size, rounding=ROUND_DOWN)
+    return (price // tick_size) * tick_size
 
 def trim_trailing_zeros(d: Decimal) -> str:
     return format(d.normalize(), 'f').rstrip('0').rstrip('.') if '.' in str(d) else str(d)

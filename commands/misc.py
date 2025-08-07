@@ -1,13 +1,14 @@
 import asyncio
 import os
 import time
-from decimal import Decimal
+from decimal import Decimal, ROUND_DOWN
 from logging import info, error
 
 import matplotlib
 
 from helpers import current_millis, l
-from helpers.money import calculate_order_quantity, dec_to_str, increase_price_percent, decrease_price_percent
+from helpers.money import calculate_order_quantity, dec_to_str, increase_price_percent, decrease_price_percent, \
+    round_price
 from mappers.balance_mapper import BalanceMapper
 from mappers.order_mapper import OrderMapper
 from models import Order, CronJob, Balance
@@ -43,6 +44,22 @@ class MiscCommand(AbstractCommand):
 
     def execute(self):
         print('Misc...')
+        safe_price = Decimal('3780.0')
+
+        #actual_balance = Decimal('0.00809190')
+        actual_balance = Decimal('0.00009190')
+
+        quantity = calculate_order_quantity(
+            balance=actual_balance,
+            price=safe_price,
+            step_size=Decimal('0.00010000'),
+            side='SELL',
+            min_qty=Decimal('0.00010000'),
+        )
+        print(f"quantity: {quantity}")
+        return True
+
+    def test_trades(self):
         trades = self._service_component.get_all_trades('ETHUSDT')
         print(trades)
         inserted_trades = self._service_component.upsert_binance_trades(trades)
