@@ -8,7 +8,7 @@ from mappers.order_mapper import OrderMapper
 from models import Order, CronJob, Balance, OrderFillingHistory
 from views.view import View
 from helpers import find_first_key_by_value, current_millis, increase_price_percent, decrease_price_percent, dec_to_str, \
-    l
+    l, sg
 
 import logging
 from logging import error, info, warning, debug
@@ -247,6 +247,13 @@ class CronCommand(AbstractCommand):
             order_params['db_side'] = OrderMapper.SIDE_BUY
             order_params['str_price'] = dec_to_str(decrease_price_percent(Decimal(db_order.order_price), Decimal(5)))
         l(self._service_component, f"params for new binance order: '{order_params}'", 'info', chat_id)
+
+        if order_params['db_side'] == OrderMapper.SIDE_SELL and not sg('autocreate_sell_order'):
+            l(self._service_component, f"new_binance_order side is 'SELL' and autocreate_sell_order is {sg('autocreate_sell_order')} - the new order WILL NOT be created", 'warning', chat_id)
+            return None
+        if order_params['db_side'] == OrderMapper.SIDE_BUY and not sg('autocreate_buy_order'):
+            l(self._service_component, f"new_binance_order side is 'BUY' and autocreate_buy_order is {sg('autocreate_buy_order')} - the new order WILL NOT be created", 'warning', chat_id)
+            return None
 
         new_binance_order: dict = self._service_component.create_order_on_binance(**order_params)
         l(self._service_component, f"new_binance_order binance_order dict: {new_binance_order}", 'info', chat_id)

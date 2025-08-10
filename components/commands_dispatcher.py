@@ -1,6 +1,6 @@
 import argparse
 
-from commands import ShowOrdersCommand, WebserverCommand, HookCommand
+from commands import ShowOrdersCommand, WebserverCommand, HookCommand, ShowSettingsCommand
 from commands import ShowOrderStatusCommand, ShowPriceCommand
 from commands import ShowPriceChartOptionsCommand, ShowPriceChartCommand
 from commands import CronCommand
@@ -56,6 +56,13 @@ def dispatch(di: dict, args) -> None | tuple[None, type[ShowOrdersCommand]] | tu
                     args.chat_id,
                 )
                 .set_deps(di['service_component'], di['view'], di['plt'])
+        )
+    elif args.command == "show_settings":
+        return (
+            None,
+            ShowSettingsCommand()
+                .set_payload(args.chat_id,)
+                .set_deps(di['service_component'], di['view'])
         )
     elif args.command == "webserver":
         return (
@@ -134,6 +141,10 @@ def parse_args(cli_name: str):
     parser_price_chart.add_argument("--period", default="1 week ago", help="Period to show")
     parser_price_chart.add_argument("--interval", default="1d", help="Interval for resolution")
     parser_price_chart.add_argument("--chat_id", type=int, help="Telegram chat id")
+
+    # show_settings
+    parser_show_settings = subparsers.add_parser("show_settings", help="Show settings")
+    parser_show_settings.add_argument("--chat_id", type=int, help="Telegram chat id")
 
     # telegram_hook
     parser_telegram_hook = subparsers.add_parser("webserver", help="Wait for Telegram hooks")

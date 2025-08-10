@@ -22,10 +22,10 @@ from commands import AbstractCommand
 import json
 
 from components import ServiceComponent
-from components import BinanceComponent
 from views.view import View
 
-from binance import AsyncClient, BinanceSocketManager, ThreadedWebsocketManager
+from binance import AsyncClient, BinanceSocketManager
+from helpers import sg, ss
 
 
 class MiscCommand(AbstractCommand):
@@ -45,9 +45,21 @@ class MiscCommand(AbstractCommand):
     def execute(self):
         print('Misc...')
 
+        autocreate_buy_order = sg('autocreate_buy_order')
+        print(f"autocreate_buy_order = {autocreate_buy_order}")
+
+        autocreate_sell_order = sg('autocreate_sell_order')
+        print(f"autocreate_sell_order = {autocreate_sell_order}")
+
+        ss('autocreate_sell_order', False)
+        print(f"autocreate_sell_order -> False")
+
+        autocreate_sell_order = sg('autocreate_sell_order')
+        print(f"autocreate_sell_order = {autocreate_sell_order}")
+
         return True
 
-    def test_calculate_order_quatity(self):
+    def misc_calculate_order_quantity(self):
         print('Misc...')
         safe_price = Decimal('3780.0')
 
@@ -64,20 +76,20 @@ class MiscCommand(AbstractCommand):
         print(f"quantity: {quantity}")
         return True
 
-    def test_trades(self):
+    def misc_trades(self):
         trades = self._service_component.get_all_trades('ETHUSDT')
         print(trades)
         inserted_trades = self._service_component.upsert_binance_trades(trades)
         print(inserted_trades)
         return True
 
-    def test_l(self):
+    def misc_l(self):
         l(self._service_component, f"hello world from info !", 'info', self._config['telegram']['chat_id'])
         l(self._service_component, f"hello world from warning !", 'warning', self._config['telegram']['chat_id'])
         l(self._service_component, f"hello world from error !", 'error', self._config['telegram']['chat_id'])
         return True
 
-    def test_create_order(self):
+    def misc_create_order(self):
         # mock from existed order
         #binance_order_id = 33375951540
         binance_order_id = 33426428405
@@ -99,7 +111,7 @@ class MiscCommand(AbstractCommand):
 
         return True
 
-    def test_asset_balance(self):
+    def misc_asset_balance(self):
         """
         # for all available assets
         for asset in BalanceMapper.get_assets():
@@ -136,7 +148,7 @@ class MiscCommand(AbstractCommand):
         """
         return True
 
-    def test_asset_ledgers(self):
+    def misc_asset_ledgers(self):
 
         ledgers = self._service_component.get_asset_ledger(
             start_time=int(time.time()*1000) - 30*24*60*60*1000,
@@ -146,7 +158,7 @@ class MiscCommand(AbstractCommand):
 
         return True
 
-    def test_asset_transfer(self):
+    def misc_asset_transfer(self):
         types = [
             'MAIN_UMFUTURE',
             'UMFUTURE_MAIN',
@@ -164,7 +176,7 @@ class MiscCommand(AbstractCommand):
             print(f'Internal transfers of type {type}: {transfers}')
         return True
 
-    def test_cron_jobs_insert(self):
+    def misc_cron_jobs_insert(self):
 
         # SELECT * FROM cron_jobs WHERE (last_executed_at IS NULL) OR (last_executed_at + execution_interval_seconds * 1000 <= UNIX_TIMESTAMP(NOW(3)) * 1000) ;
         cron_jobs_list: list = [
@@ -190,7 +202,7 @@ class MiscCommand(AbstractCommand):
             else:
                 print(f'Save {cron_job.name}: {cron_job.save()}')
 
-    def test_upsert(self):
+    def misc_upsert(self):
         bc = self._service_component.binance_component.binance_client
 
         all_orders = bc.get_all_orders(symbol = 'ETHUSDT')
@@ -219,12 +231,12 @@ class MiscCommand(AbstractCommand):
 
         await client.close_connection()
 
-    def test_websocket(self):
+    def misc_websocket(self):
         loop = asyncio.get_event_loop()
         loop.run_until_complete(self.s())
         return
 
-    def test_plt(self):
+    def misc_plt(self):
         x = [1, 2, 3, 4, 5]
         y = [10, 20, 15, 30, 25]
 
@@ -235,13 +247,13 @@ class MiscCommand(AbstractCommand):
         plt.savefig("chart.png")  # Зберегти картинку
         plt.close()
 
-    def test_view(self):
+    def misc_view(self):
         #print("OK, let's go...")
         print(self._view.render('some.j2', {
             'name': 'Serhii',
         }))
 
-    def test_tlg(self):
+    def misc_tlg(self):
         #tc = self._service_component.telegram_component
         bot_token = os.getenv("TELEGRAM_BOT_TOKEN", "")
         url = f"https://api.telegram.org/bot{bot_token}/sendMessage"

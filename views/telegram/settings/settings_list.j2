@@ -1,0 +1,8 @@
+{% if not settings_dict %}
+    No settings
+{% else %}
+    <b>The list of settings (total: {{ settings_dict | length }}):</b>
+    {% for the_key in settings_dict %}
+        <b>{{ the_key }}: ({{ show_type(settings_dict[the_key]) }}) {{ settings_dict[the_key] }}</b>
+    {% endfor %}
+{% endif %}

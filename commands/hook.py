@@ -4,6 +4,7 @@ from logging import info, error
 from commands import AbstractCommand, ShowOrderStatusCommand
 from commands import ShowPriceCommand, ShowPriceChartOptionsCommand, ShowPriceChartCommand
 from commands import ShowOrdersCommand
+from commands import ShowSettingsCommand
 import json
 
 from components import ServiceComponent
@@ -90,6 +91,13 @@ class HookCommand(AbstractCommand):
                            .set_payload(binance_symbol, chat_id)
                            .set_deps(self._service_component, self._view)
                            )
+                command.execute()
+
+            elif text.lower() == "show_settings":
+                command = (ShowSettingsCommand()
+                       .set_payload(chat_id)
+                       .set_deps(service_component=self._service_component, view=self._view)
+                    )
                 command.execute()
 
             else:

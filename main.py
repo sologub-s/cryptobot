@@ -2,9 +2,10 @@ import os
 
 from jinja2 import Environment, FileSystemLoader
 
+from components.settings import SettingsComponent
 from config import get_config
 from components import ServiceComponent, dispatch, parse_args
-from helpers import get_project_root
+from helpers import get_project_root, init_settings_component
 from views.view import View
 from views import view_helper
 
@@ -46,13 +47,18 @@ def main():
 
     view = View(environment, default_vars)
 
+    settings_component = SettingsComponent.create(db)
+
     di = { # fuck that Python...
         'config': config,
         'view': view,
         'plt': plt,
         'db': db,
         'service_component': ServiceComponent.create(config, db, view),
+        'settings_component': settings_component,
     }
+
+    init_settings_component(di['settings_component'])
 
     # commands dispatching
     err, command = dispatch(di, args)

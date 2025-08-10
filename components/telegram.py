@@ -36,6 +36,7 @@ class TelegramComponent:
                 "keyboard": [
                     #["show_orders", "status"],
                     ["show_orders",],
+                    ["show_settings",],
                     ["show_price:ETHUSDT",],
                     ["show_price_chart_options:ETHUSDT",],
                 ],

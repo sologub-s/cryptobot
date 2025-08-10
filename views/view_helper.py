@@ -32,6 +32,9 @@ def to_eng_string(value: Decimal) -> str:
 def dec_to_str(value: Decimal) -> str:
     return money.dec_to_str(Decimal(value))
 
+def show_type(value) -> str:
+    return type(value).__name__
+
 def get_globals():
     return {
         'format_timestamp': format_timestamp,
@@ -43,5 +46,6 @@ def get_globals():
         'decimal': decimal,
         'to_eng_string': to_eng_string,
         'dec_to_str': dec_to_str,
+        'show_type': show_type,
     }
 
