@@ -3,4 +3,4 @@ PATH=/usr/local/sbin:/usr/local/bin:/sbin:/bin:/usr/sbin:/usr/bin
 #* * * * * /usr/bin/curl http://127.0.0.1:8765/cron > /dev/null 2>&1
 #* * * * * root /usr/bin/curl http://127.0.0.1:8765/cron >> /var/log/cron.log 2>&1
 * * * * * root echo "Cron works: $(date)" >> /proc/1/fd/1 2>&1
-* * * * * root cd /app && python main.py cron  >> /proc/1/fd/1 2>&1
+* * * * * root cd /app && python -m cryptobot cron  >> /proc/1/fd/1 2>&1

@@ -3,7 +3,7 @@ from peewee import (
     TextField, IntegerField, SmallIntegerField
 )
 
-from mappers.setting_mapper import SettingMapper
+from cryptobot.mappers.setting_mapper import SettingMapper
 from .base import BaseModel
 
 class Setting(BaseModel):

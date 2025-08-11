@@ -6,26 +6,26 @@ from logging import info, error
 
 import matplotlib
 
-from helpers import current_millis, l
-from helpers.money import calculate_order_quantity, dec_to_str, increase_price_percent, decrease_price_percent, \
+from cryptobot.helpers import current_millis, l
+from cryptobot.helpers.money import calculate_order_quantity, dec_to_str, increase_price_percent, decrease_price_percent, \
     round_price
-from mappers.balance_mapper import BalanceMapper
-from mappers.order_mapper import OrderMapper
-from models import Order, CronJob, Balance
+from cryptobot.mappers.balance_mapper import BalanceMapper
+from cryptobot.mappers.order_mapper import OrderMapper
+from cryptobot.models import Order, CronJob, Balance
 
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 import requests
 
-from commands import AbstractCommand
+from cryptobot.commands import AbstractCommand
 import json
 
-from components import ServiceComponent
-from views.view import View
+from cryptobot.components import ServiceComponent
+from cryptobot.views.view import View
 
 from binance import AsyncClient, BinanceSocketManager
-from helpers import sg, ss
+from cryptobot.helpers import sg, ss
 
 
 class MiscCommand(AbstractCommand):
@@ -44,6 +44,9 @@ class MiscCommand(AbstractCommand):
 
     def execute(self):
         print('Misc...')
+        return True
+
+    def misc_check_settings(self):
 
         autocreate_buy_order = sg('autocreate_buy_order')
         print(f"autocreate_buy_order = {autocreate_buy_order}")

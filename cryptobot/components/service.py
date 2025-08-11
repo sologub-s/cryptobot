@@ -4,15 +4,15 @@ from decimal import Decimal
 from io import BytesIO
 from logging import info, error
 
-from helpers.money import round_price
-from views.view import View
+from cryptobot.helpers.money import round_price
+from cryptobot.views.view import View
 
 from peewee import MySQLDatabase
 
-from helpers import current_millis, calculate_order_quantity, l
-from mappers.balance_mapper import BalanceMapper
-from mappers.order_mapper import OrderMapper
-from models import Balance, Order, OrderFillingHistory, OrderTrade
+from cryptobot.helpers import current_millis, calculate_order_quantity, l
+from cryptobot.mappers.balance_mapper import BalanceMapper
+from cryptobot.mappers.order_mapper import OrderMapper
+from cryptobot.models import Balance, Order, OrderFillingHistory, OrderTrade
 from .binance_raw_client import BinanceRawClientComponent
 from .binance import BinanceComponent
 from .telegram import TelegramComponent

@@ -2,9 +2,9 @@ import datetime
 import io
 import json
 
-from commands import AbstractCommand
-from components import ServiceComponent
-from views.view import View
+from cryptobot.commands import AbstractCommand
+from cryptobot.components import ServiceComponent
+from cryptobot.views.view import View
 
 KLINE_INTERVAL_1SECOND = "1s"
 KLINE_INTERVAL_1MINUTE = "1m"

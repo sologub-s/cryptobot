@@ -1,6 +1,6 @@
 from decimal import Decimal
 from typing import Optional
-from components.settings import SettingsComponent
+from cryptobot.components.settings import SettingsComponent
 
 _settings_component: Optional[SettingsComponent] = None
 

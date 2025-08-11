@@ -1,6 +1,6 @@
-from commands import AbstractCommand
-from components import ServiceComponent
-from views.view import View
+from cryptobot.commands import AbstractCommand
+from cryptobot.components import ServiceComponent
+from cryptobot.views.view import View
 
 
 class ShowPriceCommand(AbstractCommand):

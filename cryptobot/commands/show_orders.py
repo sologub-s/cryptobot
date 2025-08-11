@@ -1,8 +1,8 @@
-from commands import AbstractCommand
-from components import ServiceComponent
-from mappers.order_mapper import OrderMapper
-from models import Order
-from views.view import View
+from cryptobot.commands import AbstractCommand
+from cryptobot.components import ServiceComponent
+from cryptobot.mappers.order_mapper import OrderMapper
+from cryptobot.models import Order
+from cryptobot.views.view import View
 
 
 class ShowOrdersCommand(AbstractCommand):

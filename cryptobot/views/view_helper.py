@@ -1,8 +1,8 @@
 from datetime import datetime
 from decimal import Decimal
 
-from helpers import slugify as slugify_helper, money
-from mappers.order_mapper import OrderMapper
+from cryptobot.helpers import slugify as slugify_helper, money
+from cryptobot.mappers.order_mapper import OrderMapper
 
 
 def format_timestamp(timestamp: int, format_string: str = '%Y-%m-%d %H:%M:%S') -> str:

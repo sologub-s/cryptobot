@@ -1,14 +1,14 @@
 import sys
 from logging import info, error
 
-from commands import AbstractCommand, ShowOrderStatusCommand
-from commands import ShowPriceCommand, ShowPriceChartOptionsCommand, ShowPriceChartCommand
-from commands import ShowOrdersCommand
-from commands import ShowSettingsCommand
+from cryptobot.commands import AbstractCommand, ShowOrderStatusCommand
+from cryptobot.commands import ShowPriceCommand, ShowPriceChartOptionsCommand, ShowPriceChartCommand
+from cryptobot.commands import ShowOrdersCommand
+from cryptobot.commands import ShowSettingsCommand
 import json
 
-from components import ServiceComponent
-from views.view import View
+from cryptobot.components import ServiceComponent
+from cryptobot.views.view import View
 
 
 class HookCommand(AbstractCommand):

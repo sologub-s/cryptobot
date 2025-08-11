@@ -1,12 +1,12 @@
 import sys
 from logging import error, info
 
-from commands import AbstractCommand
+from cryptobot.commands import AbstractCommand
 import json
 import subprocess
 from flask import Flask, request, jsonify
 
-from components import ServiceComponent
+from cryptobot.components import ServiceComponent
 
 
 class WebserverCommand(AbstractCommand):
@@ -57,7 +57,7 @@ class WebserverCommand(AbstractCommand):
 
             try:
                 result = subprocess.run(
-                    ["python", "main.py", "hook"],
+                    ["python", "-m", "cryptobot", "hook"],
                     input=json.dumps(data),
                     text=True,
                     #capture_output=True,
@@ -76,7 +76,7 @@ class WebserverCommand(AbstractCommand):
 
             try:
                 result = subprocess.run(
-                    ["python", "main.py", "cron", f"--chat_id={self._payload['chat_id']}"],
+                    ["python", "-m", "cryptobot", "cron", f"--chat_id={self._payload['chat_id']}"],
                     #input=json.dumps(data),
                     text=True,
                     #capture_output=True,

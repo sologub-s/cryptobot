@@ -2,19 +2,19 @@ import os
 
 from jinja2 import Environment, FileSystemLoader
 
-from components.settings import SettingsComponent
-from config import get_config
-from components import ServiceComponent, dispatch, parse_args
-from helpers import get_project_root, init_settings_component
-from views.view import View
-from views import view_helper
+from cryptobot.components.settings import SettingsComponent
+from cryptobot.config import get_config
+from cryptobot.components import ServiceComponent, dispatch, parse_args
+from cryptobot.helpers import get_project_root, init_settings_component
+from cryptobot.views.view import View
+from cryptobot.views import view_helper
 
 import matplotlib
 matplotlib.use('Agg')
 import matplotlib.pyplot as plt
 
 from peewee import MySQLDatabase
-from models import database_proxy
+from cryptobot.models import database_proxy
 
 
 def main():

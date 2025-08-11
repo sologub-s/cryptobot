@@ -4,9 +4,9 @@ from peewee import (
     MySQLDatabase, Model, BigIntegerField, DecimalField, AutoField, SmallIntegerField, DatabaseProxy, CharField
 )
 
-from helpers import current_millis
+from cryptobot.helpers import current_millis
 from .base import BaseModel
-from mappers.balance_mapper import BalanceMapper
+from cryptobot.mappers.balance_mapper import BalanceMapper
 
 
 

@@ -1,4 +1,4 @@
-from helpers.time import current_millis
+from cryptobot.helpers.time import current_millis
 from peewee import (
     MySQLDatabase, Model, BigIntegerField, DecimalField, AutoField, SmallIntegerField, DatabaseProxy
 )

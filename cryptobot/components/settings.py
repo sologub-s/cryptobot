@@ -2,8 +2,8 @@ from decimal import Decimal
 
 from peewee import MySQLDatabase
 
-from mappers.setting_mapper import SettingMapper
-from models import Setting
+from cryptobot.mappers.setting_mapper import SettingMapper
+from cryptobot.models import Setting
 
 
 class SettingsComponent:

@@ -1,10 +1,10 @@
 import argparse
 
-from commands import ShowOrdersCommand, WebserverCommand, HookCommand, ShowSettingsCommand
-from commands import ShowOrderStatusCommand, ShowPriceCommand
-from commands import ShowPriceChartOptionsCommand, ShowPriceChartCommand
-from commands import CronCommand
-from commands import MiscCommand
+from cryptobot.commands import ShowOrdersCommand, WebserverCommand, HookCommand, ShowSettingsCommand
+from cryptobot.commands import ShowOrderStatusCommand, ShowPriceCommand
+from cryptobot.commands import ShowPriceChartOptionsCommand, ShowPriceChartCommand
+from cryptobot.commands import CronCommand
+from cryptobot.commands import MiscCommand
 
 def dispatch(di: dict, args) -> None | tuple[None, type[ShowOrdersCommand]] | tuple[str, None]:
 

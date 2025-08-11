@@ -4,7 +4,7 @@ from peewee import (
     MySQLDatabase, Model, BigIntegerField, DecimalField, AutoField, SmallIntegerField, DatabaseProxy, CharField,
     ForeignKeyField
 )
-from mappers.order_mapper import OrderMapper
+from cryptobot.mappers.order_mapper import OrderMapper
 from . import Order
 
 from .base import BaseModel

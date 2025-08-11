@@ -1,6 +1,6 @@
 import json
 from io import BytesIO
-from helpers import slugify
+from cryptobot.helpers import slugify
 
 import requests
 
