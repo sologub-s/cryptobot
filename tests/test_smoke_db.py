@@ -1,9 +1,10 @@
 import time
 
 
-def test_db_smoke(db_session_conn):
+def test_db_smoke(db_session_conn, apply_seed_fixture):
     # Create a setting and read it back
     cur = db_session_conn.cursor(dictionary=True)
+    apply_seed_fixture(seed_name='common')
     ts_millis = int(round(time.time() * 1000))
     cur.execute(""
                 "INSERT INTO settings"
@@ -23,3 +24,5 @@ def test_db_smoke(db_session_conn):
     assert row['the_key'] == 'first_key'
     assert row['the_value'] == 'hello world'
     assert row['the_type'] == 5
+
+    apply_seed_fixture(seed_name='', files='clear.sql')

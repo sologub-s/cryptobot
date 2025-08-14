@@ -1,0 +1,4 @@
+INSERT INTO `order_trades` (`id`, `created_at`, `updated_at`, `binance_id`, `order_id`, `binance_order_id`, `symbol`, `order_list_id`, `price`, `quantity`, `quote_quantity`, `commission`, `commission_asset_char`, `binance_time`, `is_buyer`, `is_maker`, `is_best_match`) VALUES
+(17,	1754536387590,	NULL,	2675997163,	23,	33375951540,	1,	-1,	3600.00000000,	0.00810000,	29.16000000,	0.00000810,	'ETH',	1754035556060,	1,	1,	1),
+(19,	1754582225303,	NULL,	2696775653,	24,	33426428405,	1,	-1,	3780.00000000,	0.00800000,	30.24000000,	0.03024000,	'USDT',	1754561595675,	0,	1,	1),
+(20,	1755129605703,	NULL,	2726273963,	29,	34089697496,	1,	-1,	4750.00000000,	0.00440000,	20.90000000,	0.00000440,	'ETH',	1755129544589,	1,	1,	1);

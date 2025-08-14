@@ -8,7 +8,8 @@ from dotenv import load_dotenv
 
 # Load .env from repo root (one level above /tests)
 ROOT = Path(__file__).resolve().parents[1]
-load_dotenv(ROOT / ".env")  # ← підтягує змінні в os.environ
+SEEDS_DIR = Path(__file__).parent / "db" / "seeds"
+load_dotenv(ROOT / ".env")
 
 DB_NAME = os.getenv("TEST_DATABASE_NAME")
 DB_HOST = os.getenv("TEST_DATABASE_HOST")
@@ -39,21 +40,13 @@ def _connect(db: str | None = None):
 
     return conn
 
-def _apply_sql_file(cur, path: str):
-    """Apply a .sql file by splitting on semicolons. Keep it simple."""
-    with open(path, "r", encoding="utf-8") as f:
-        sql = f.read()
-    # naive split by ';' is ok for simple DDL without procedures
-    for stmt in [s.strip() for s in sql.split(";") if s.strip()]:
-        cur.execute(stmt)
-
 def _apply_migrations(conn):
     """Run all migrations in lexical order."""
     cur = conn.cursor()
     #cur.execute(f"CREATE DATABASE IF NOT EXISTS {DB_NAME}")
     #cur.execute(f"USE {DB_NAME}")
     for path in sorted(glob.glob(os.path.join(MIGRATIONS_DIR, "*.sql"))):
-        _apply_sql_file(cur, path)
+        _apply_sql_file(cur, Path(path))
     conn.commit()
     cur.close()
 
@@ -77,6 +70,30 @@ def _truncate_all_tables(conn):
     cur.execute("SET FOREIGN_KEY_CHECKS=0")
     for t in tables:
         cur.execute(f"TRUNCATE TABLE `{t}`")
+    cur.execute("SET FOREIGN_KEY_CHECKS=1")
+    conn.commit()
+    cur.close()
+
+def _apply_sql_file(cur, path: Path):
+    sql = path.read_text(encoding="utf-8")
+    for stmt in [s.strip() for s in sql.split(";") if s.strip()]:
+        cur.execute(stmt)
+
+@pytest.fixture
+def apply_seed_fixture(db_session_conn):
+    def run(seed_name: str, files: list[str] | None = None):
+        apply_seed(db_session_conn, seed_name, files)
+    return run
+
+def apply_seed(conn, seed_name: str|None, files: str | list[str] | None = None):
+    cur = conn.cursor()
+    cur.execute("SET FOREIGN_KEY_CHECKS=0")
+    seed_path = SEEDS_DIR / seed_name if seed_name else SEEDS_DIR
+    #seed_path = SEEDS_DIR / seed_name
+    files = [files] if type(files) is str else files
+    paths = [seed_path / f for f in files] if files else sorted(seed_path.glob("*.sql"))
+    for p in paths:
+        _apply_sql_file(cur, Path(p))
     cur.execute("SET FOREIGN_KEY_CHECKS=1")
     conn.commit()
     cur.close()
