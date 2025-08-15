@@ -44,6 +44,10 @@ class MiscCommand(AbstractCommand):
 
     def execute(self):
         print('Misc...')
+        self._service_component.send_telegram_message(
+            chat_id=self._config['telegram']['chat_id'],
+            message='hello world from port',
+        )
         return True
 
     def misc_check_settings(self):

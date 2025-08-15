@@ -16,13 +16,15 @@ from cryptobot.models import Balance, Order, OrderFillingHistory, OrderTrade
 from .binance_raw_client import BinanceRawClientComponent
 from .binance import BinanceComponent
 from .telegram import TelegramComponent
+from ..ports.telegram import TelegramComponentPort
+
 
 class ServiceComponent:
     def __init__(
             self,
             binance_component: BinanceComponent,
             binance_raw_client_component: BinanceRawClientComponent,
-            telegram_component: TelegramComponent,
+            telegram_component: TelegramComponentPort,
             db: MySQLDatabase,
             view: View,
     ):
@@ -34,11 +36,11 @@ class ServiceComponent:
         self.view = view
 
     @classmethod
-    def create(cls, config: dict, db: MySQLDatabase, view: View):
+    def create(cls, config: dict, db: MySQLDatabase, view: View, telegram_component: TelegramComponentPort):
         return cls(
             binance_component=BinanceComponent.create(config["binance"]),
             binance_raw_client_component=BinanceRawClientComponent.create(config["binance"]),
-            telegram_component=TelegramComponent.create(config["telegram"]),
+            telegram_component=telegram_component,
             db=db,
             view=view,
         )

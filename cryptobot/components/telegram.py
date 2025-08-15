@@ -1,18 +1,27 @@
 import json
 from io import BytesIO
+
+from requests import Response
+
 from cryptobot.helpers import slugify
 
 import requests
 
-class TelegramComponent:
-    def __init__(self, bot_token: str, bot_api_secret_token: str):
-        super().__init__()
+from cryptobot.ports.telegram import TelegramComponentPort
+from cryptobot.ports.telegram_http_transport import TelegramHttpTransportComponentPort
+
+
+class TelegramComponent(TelegramComponentPort):
+
+    def __init__(self, bot_token: str, bot_api_secret_token: str, telegram_http_transport_component: TelegramHttpTransportComponentPort):
+        super().__init__(bot_token, bot_api_secret_token, telegram_http_transport_component)
         self.bot_token = bot_token
         self.bot_api_secret_token = bot_api_secret_token
+        self.telegram_http_transport_component = telegram_http_transport_component
 
     @classmethod
-    def create(cls, telegram_config: dict):
-        return cls(telegram_config["bot_token"], telegram_config["bot_api_secret_token"])
+    def create(cls, telegram_config: dict, telegram_http_transport_component: TelegramHttpTransportComponentPort):
+        return cls(telegram_config["bot_token"], telegram_config["bot_api_secret_token"], telegram_http_transport_component)
 
     @property
     def bot_token(self):
@@ -64,10 +73,7 @@ class TelegramComponent:
             "reply_markup": json.dumps(reply_markup),
         }
 
-        response = requests.post(url, data = data)
-        #print(f"Telegram response: {response.status_code}, {response.text}")
-        if not response.ok:
-            print("ERROR: Cannot send message to Telegram:", response.text)
+        return self.telegram_http_transport_component.request_post(url, data = data)
 
     def send_telegram_photo(self, chat_id: int, photo_buf: BytesIO, photo_name: str = None, parse_mode = "HTML"):
         url = f"https://api.telegram.org/bot{self.bot_token}/sendPhoto"
@@ -82,7 +88,4 @@ class TelegramComponent:
             "caption": photo_name,
             "reply_markup": json.dumps(reply_markup),
         }
-        response = requests.post(url, data=data, files=files)
-        #print(f"Telegram response: {response.status_code}, {response.text}")
-        if not response.ok:
-            print("ERROR: Cannot send message to Telegram:", response.text)
+        return self.telegram_http_transport_component.request_post(url, data = data, files = files)

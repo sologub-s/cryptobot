@@ -3,8 +3,9 @@ import os
 from jinja2 import Environment, FileSystemLoader
 
 from cryptobot.components.settings import SettingsComponent
+from cryptobot.components.telegram_http_transport import TelegramHttpTransportComponent
 from cryptobot.config import get_config
-from cryptobot.components import ServiceComponent, dispatch, parse_args
+from cryptobot.components import ServiceComponent, dispatch, parse_args, TelegramComponent
 from cryptobot.helpers import get_project_root, init_settings_component
 from cryptobot.views.view import View
 from cryptobot.views import view_helper
@@ -49,12 +50,14 @@ def main():
 
     settings_component = SettingsComponent.create(db)
 
+    telegram_component = TelegramComponent.create(config["telegram"], TelegramHttpTransportComponent())
+
     di = { # fuck that Python...
         'config': config,
         'view': view,
         'plt': plt,
         'db': db,
-        'service_component': ServiceComponent.create(config, db, view),
+        'service_component': ServiceComponent.create(config, db, view, telegram_component),
         'settings_component': settings_component,
     }
 
