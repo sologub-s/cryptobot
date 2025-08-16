@@ -1,10 +1,24 @@
 import os
 import glob
 from pathlib import Path
+from typing import Any
+import matplotlib.pyplot as plt
 
 import mariadb
 import pytest
 from dotenv import load_dotenv
+from jinja2 import Environment, FileSystemLoader
+from peewee import MySQLDatabase
+
+from cryptobot.components import TelegramComponent, ServiceComponent
+from cryptobot.components.settings import SettingsComponent
+from cryptobot.components.telegram_http_transport import TelegramHttpTransportComponent
+from cryptobot.helpers import get_project_root, init_settings_component
+from cryptobot.views import view_helper
+from cryptobot.views.view import View
+from tests.components.telegram_http_transport_mock import TelegramHttpTransportMockComponent
+from tests.config import get_config
+from cryptobot.models import database_proxy
 
 # Load .env from repo root (one level above /tests)
 ROOT = Path(__file__).resolve().parents[1]
@@ -83,7 +97,9 @@ def _apply_sql_file(cur, path: Path):
 def apply_seed_fixture(db_session_conn):
     def run(seed_name: str, files: list[str] | None = None):
         apply_seed(db_session_conn, seed_name, files)
-    return run
+    #return run
+    yield run
+    _truncate_all_tables(db_session_conn)
 
 def apply_seed(conn, seed_name: str|None, files: str | list[str] | None = None):
     cur = conn.cursor()
@@ -117,3 +133,52 @@ def db_clean(db_session_conn):
     """Function-scoped cleanup: truncate all tables before each test."""
     _truncate_all_tables(db_session_conn)
     yield
+
+@pytest.fixture
+def make_config() -> dict[str, Any]:
+    return get_config()
+
+@pytest.fixture
+def make_di(make_config) -> dict[str, Any]:
+
+    config = make_config
+
+    environment = Environment(
+        loader = FileSystemLoader(
+            get_project_root() + os.sep + config["view"]["views_folder"]
+        )
+    )
+
+    environment.globals.update(view_helper.get_globals())
+
+    default_vars = {}
+
+    db = MySQLDatabase(
+        config["db"]["name"], # database name
+        user = config["db"]["user"], # database username
+        password = config["db"]["pass"], # database password
+        host = config["db"]["host"],  # database host
+        port = config["db"]["port"]  # database port
+    )
+    database_proxy.initialize(db)
+    if not db.connect():
+        print(f'ERROR: Cannot connect to database {config["db"]["host"]}')
+
+    view = View(environment, default_vars)
+
+    settings_component = SettingsComponent.create(db)
+
+    telegram_component = TelegramComponent.create(config["telegram"], TelegramHttpTransportMockComponent())
+
+    di = { # fuck that Python...
+        'config': config,
+        'view': view,
+        'plt': plt,
+        'db': db,
+        'service_component': ServiceComponent.create(config, db, view, telegram_component),
+        'settings_component': settings_component,
+    }
+
+    init_settings_component(di['settings_component'])
+
+    return di

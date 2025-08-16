@@ -1,6 +1,9 @@
 import time
 
+import pytest
 
+
+@pytest.mark.smoke
 def test_db_smoke(db_session_conn, apply_seed_fixture):
     # Create a setting and read it back
     cur = db_session_conn.cursor(dictionary=True)
@@ -17,7 +20,7 @@ def test_db_smoke(db_session_conn, apply_seed_fixture):
     cur.execute("SELECT * FROM settings WHERE the_key=%s", ("first_key",))
     row = cur.fetchone()
     cur.close()
-    print(row)
+    #print(row)
     assert row is not None
     assert row['created_at'] == ts_millis
     assert row['updated_at'] is None
