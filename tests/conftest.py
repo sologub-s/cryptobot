@@ -169,6 +169,7 @@ def make_di(make_config) -> dict[str, Any]:
     settings_component = SettingsComponent.create(db)
 
     telegram_component = TelegramComponent.create(config["telegram"], TelegramHttpTransportMockComponent())
+    #telegram_component = TelegramComponent.create(config["telegram"], TelegramHttpTransportComponent())
 
     di = { # fuck that Python...
         'config': config,
