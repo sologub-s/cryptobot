@@ -85,8 +85,9 @@ class ShowPriceChartCommand(AbstractCommand):
             self._plt.text(dates[0], average_prices[-1], f"Current price: {average_prices[-1]}", va = 'bottom', color = "blue")
 
         for order in orders:
-            self._plt.axhline(y = round(float(order['price']), 2), color = "green", linestyle = "--")
-            self._plt.text(dates[0], round(float(order['price']), 2), f"{round(float(order['price']), 2)} ({order['side'].lower()} {round(float(order['origQty']), 4)}, order amount: {round(float(order['price'])  * float(order['origQty']), 2)})", va = 'bottom', color="green")
+            color: str = 'green' if order['side'] == 'BUY' else 'red'
+            self._plt.axhline(y = round(float(order['price']), 2), color = color, linestyle = "--")
+            self._plt.text(dates[0], round(float(order['price']), 2), f"{round(float(order['price']), 2)} ({order['side'].lower()} {round(float(order['origQty']), 4)}, order amount: {round(float(order['price'])  * float(order['origQty']), 2)})", va = 'bottom', color=color)
 
         title: str = f"{self._payload["binance_symbol"]} - Price History (since {self._payload["period"]}, interval {self._payload["interval"]})"
         self._plt.title(title)
