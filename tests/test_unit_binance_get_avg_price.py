@@ -9,7 +9,7 @@ def test_unit_binance_get_avg_price(db_session_conn, apply_seed_fixture, make_co
     config = make_config
     di = make_di
     sc: ServiceComponent = di['service_component']
-    binance_client = sc.binance_component.binance_client
+    binance_client_adapter = sc.binance_gateway.binance_client_adapter
 
     symbol: str = 'ETHUSDT'
     mock_price: dict = {
@@ -18,7 +18,8 @@ def test_unit_binance_get_avg_price(db_session_conn, apply_seed_fixture, make_co
         'closeTime': 1755388879049,
     }
     #binance_client.mock_price = mock_price
-    #price = sc.get_price_for_binance_symbol(symbol)
+    price = sc.get_price_for_binance_symbol(symbol)
+    print(price)
     #
 
     #apply_seed_fixture(seed_name='', files='clear.sql')

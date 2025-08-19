@@ -51,7 +51,6 @@ class ShowPriceChartCommand(AbstractCommand):
             return False
 
         klines = self._service_component.get_historical_klines(self._payload["binance_symbol"], self._payload["period"], self._payload["interval"])
-        klines = self._service_component.map_historical_klines(klines)
         price = self._service_component.get_price_for_binance_symbol(self._payload["binance_symbol"])
         orders = self._service_component.get_open_orders()
 

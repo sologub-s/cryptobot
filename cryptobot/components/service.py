@@ -1,64 +1,64 @@
-import html
 import time
 from decimal import Decimal
 from io import BytesIO
 from logging import info, error
+from typing import Any
 
 from cryptobot.helpers.money import round_price
 from cryptobot.views.view import View
 
 from peewee import MySQLDatabase
-
 from cryptobot.helpers import current_millis, calculate_order_quantity, l
 from cryptobot.mappers.balance_mapper import BalanceMapper
 from cryptobot.mappers.order_mapper import OrderMapper
 from cryptobot.models import Balance, Order, OrderFillingHistory, OrderTrade
-from .binance_raw_client import BinanceRawClientComponent
-from .binance import BinanceComponent
-from .telegram import TelegramComponent
+from ..ports.binance_gateway import BinanceGatewayPort
 from ..ports.telegram import TelegramComponentPort
 
-
 class ServiceComponent:
+
     def __init__(
             self,
-            binance_component: BinanceComponent,
-            binance_raw_client_component: BinanceRawClientComponent,
+            binance_gateway: BinanceGatewayPort,
             telegram_component: TelegramComponentPort,
             db: MySQLDatabase,
             view: View,
     ):
         super().__init__()
-        self.binance_component = binance_component
-        self.binance_raw_client_component = binance_raw_client_component
+        self.binance_gateway = binance_gateway
         self.telegram_component = telegram_component
         self.db = db
         self.view = view
 
     @classmethod
-    def create(cls, config: dict, db: MySQLDatabase, view: View, telegram_component: TelegramComponentPort):
+    def create(
+        cls,
+        db: MySQLDatabase,
+        view: View,
+        telegram_component: TelegramComponentPort,
+        binance_gateway: BinanceGatewayPort,
+    ):
         return cls(
-            binance_component=BinanceComponent.create(config["binance"]),
-            binance_raw_client_component=BinanceRawClientComponent.create(config["binance"]),
             telegram_component=telegram_component,
             db=db,
             view=view,
+            binance_gateway=binance_gateway,
         )
 
     def check_telegram_bot_api_secret_token(self, bot_api_secret_token: str) -> bool:
         return self.telegram_component.check_telegram_bot_api_secret_token(bot_api_secret_token)
 
     def get_open_orders(self):
-        return self.binance_component.get_open_orders()
+        return self.binance_gateway.get_open_orders()
 
     def get_all_orders(self, symbol: str):
-        return self.binance_component.get_all_orders(symbol)
+        return self.binance_gateway.get_all_orders(symbol)
 
     def get_order_by_binance_order_id_and_binance_symbol(self, binance_order_id: int, binance_order_symbol: str):
-        return self.binance_component.get_order_by_binance_order_id(binance_order_id, binance_order_symbol)
+        return self.binance_gateway.get_order_by_binance_order_id(binance_order_id, binance_order_symbol)
 
-    def get_price_for_binance_symbol(self, binance_order_symbol: str) -> dict | dict:
-        return self.binance_component.get_price_for_binance_symbol(binance_order_symbol)
+    def get_price_for_binance_symbol(self, binance_order_symbol: str) -> dict[str, Any]:
+        return self.binance_gateway.get_price_for_binance_symbol(binance_order_symbol)
 
     def map_historical_klines(self, klines: list) -> list:
         klines_mapped: list = []
@@ -77,7 +77,8 @@ class ServiceComponent:
         return klines_mapped
 
     def get_historical_klines(self, binance_order_symbol: str, period: str, interval: str) -> list:
-        return self.binance_component.get_historical_klines(binance_order_symbol, period, interval)
+        klines = self.binance_gateway.get_historical_klines(binance_order_symbol, period, interval)
+        return self.map_historical_klines(klines)
 
     def send_telegram_message(self, chat_id: int, message: str, inline_keyboard=None, disable_notification=False):
         if inline_keyboard is None:
@@ -88,16 +89,16 @@ class ServiceComponent:
         self.telegram_component.send_telegram_photo(chat_id, photo_buf, photo_name)
 
     def get_asset_transfer(self, type: str, start_time=None, end_time=None, limit=100):
-        return self.binance_raw_client_component.get_asset_transfer(type=type, start_time=start_time, end_time=end_time, limit=limit)
+        return self.binance_gateway.get_asset_transfer(type=type, start_time=start_time, end_time=end_time, limit=limit)
 
     def get_asset_ledger(self, asset=None, start_time=None, end_time=None, limit=100):
-        return self.binance_raw_client_component.get_asset_ledger(asset=asset, start_time=start_time, end_time=end_time, limit=limit)
+        return self.binance_gateway.get_asset_ledger(asset=asset, start_time=start_time, end_time=end_time, limit=limit)
 
     def get_asset_balance(self, asset=None):
-        return self.binance_component.get_asset_balance(asset)
+        return self.binance_gateway.get_asset_balance(asset)
 
     def get_all_trades(self, binance_symbol: str) -> list[dict]:
-        return self.binance_raw_client_component.get_all_trades(binance_symbol=binance_symbol)
+        return self.binance_gateway.get_all_trades(binance_symbol=binance_symbol)
 
     def upsert_binance_trades(self, trades: list[dict]) -> list[int]:
         if len(trades) == 0:
@@ -151,7 +152,7 @@ class ServiceComponent:
             all_orders_binance_order_ids.append(db_order.binance_order_id)
         all_trades = []
         for binance_symbol in all_binance_symbols:
-            all_trades += self.binance_raw_client_component.get_all_trades(
+            all_trades += self.binance_gateway.get_all_trades(
                 binance_symbol=binance_symbol,
             )
 
@@ -210,7 +211,7 @@ class ServiceComponent:
         })
         self.send_telegram_message(chat_id, message)
 
-    def write_orders_filling_history(self, binance_order: dict, db_order_id: int, logged_at: int) -> int|None:
+    def write_orders_filling_history(self, binance_order: dict, db_order_id: int, logged_at: int) -> int | None:
         order_filling_history = OrderFillingHistory().fill_from_binance(binance_order)
         order_filling_history.order_id = db_order_id
         order_filling_history.logged_at = logged_at
@@ -306,7 +307,7 @@ class ServiceComponent:
             if not side:
                 l(self, f"Cannot create order on Binance - unknown side '{db_side}'", 'error', chat_id)
 
-        symbol_info = self.binance_component.get_symbol_info(symbol)
+        symbol_info = self.binance_gateway.get_symbol_info(symbol)
         if side == 'BUY':
             asset_to_sell = symbol_info['quoteAsset']
         else:
@@ -375,7 +376,7 @@ class ServiceComponent:
                     'price': str(safe_price),
                 }
                 l(self, f"attempt #{tries} to create test order on binance with the following params: {params}...", 'info', chat_id)
-                result = self.binance_component.create_test_order(**params)
+                result = self.binance_gateway.create_test_order(**params)
                 l(self, f"create_test_order() result: {result}", 'info', chat_id)
                 can_create = True
             except Exception as e:
@@ -418,7 +419,7 @@ class ServiceComponent:
             l(self, m, 'info', chat_id)
             # todo replace with order's owner's chat_id
             self.send_telegram_message(chat_id, m,)
-            real_result = self.binance_component.create_order(**params)
+            real_result = self.binance_gateway.create_order(**params)
             l(self, f"create_order() result: {real_result}", 'info', chat_id)
             return real_result
         return None
