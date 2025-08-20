@@ -3,6 +3,8 @@ import os
 import time
 from decimal import Decimal, ROUND_DOWN
 from logging import info, error
+from pprint import pformat
+from typing import Any
 
 import matplotlib
 
@@ -44,6 +46,59 @@ class MiscCommand(AbstractCommand):
 
     def execute(self):
         print('Misc...')
+        assets: list[str] = ['USDT','ETH','BTC',]
+        for asset in assets:
+            asset_balance = self._service_component.binance_gateway.binance_client_adapter.get_asset_balance('sdfsdfsf')
+            print(asset_balance)
+        return True
+
+    def misc_historical_klines(self):
+
+        keys = [
+            "1_year_ago_UTC:1M",
+            "6_months_ago_UTC:1M",
+            "3_months_ago_UTC:1w",
+            "1_months_ago_UTC:1d",
+            "1_week_ago_UTC:1d",
+            "3_days_ago_UTC:1h",
+            "1_day_ago_UTC:1h",
+            "3_hours_ago_UTC:1m",
+            "1_hour_ago_UTC:1m",
+        ]
+        symbols: list[str] = ['ETHUSDT']
+        mock_historical_klines: dict[str, list[list[Any]]] = {}
+        fname: str = 'tests/mocks/binance/historical_klines.py'
+        with open(fname, "w", encoding="utf-8") as f:
+            f.write("from typing import Any\n\n")
+            f.write("def get_mock_historical_klines() -> dict[str, list[list[Any]]]:\n\n")
+            f.write("    mock_historical_klines: dict[str, list[list[Any]]] = {}\n\n")
+            f.close()
+
+
+        for symbol in symbols:
+            for key in keys:
+                key_splitted: list[str] = key.split(":")
+                period = key_splitted[0].replace("_", " ")
+                interval =key_splitted[1]
+
+                klines: list[list[Any]] = self._service_component.binance_gateway.binance_client_adapter.get_historical_klines(
+                    symbol=symbol,
+                    start_str=period,
+                    interval=interval,
+                )
+                new_key = f'{symbol}:{period.replace(" ", "_")}:{interval}'
+                mock_historical_klines[new_key] = klines
+                with open(fname, "a", encoding="utf-8") as f:
+                    f.write("    mock_historical_klines['"+new_key+"'] = "+pformat(mock_historical_klines[new_key], indent=4)+"\n\n")
+                    f.close()
+                time.sleep(1)
+                #return True
+        with open(fname, "a", encoding="utf-8") as f:
+            f.write("    return mock_historical_klines")
+            f.close()
+        return True
+
+    def misc_telegram_port(self):
         self._service_component.send_telegram_message(
             chat_id=self._config['telegram']['chat_id'],
             message='hello world from port',

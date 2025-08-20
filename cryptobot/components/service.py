@@ -25,10 +25,10 @@ class ServiceComponent:
             view: View,
     ):
         super().__init__()
-        self.binance_gateway = binance_gateway
-        self.telegram_component = telegram_component
-        self.db = db
-        self.view = view
+        self.binance_gateway: BinanceGatewayPort = binance_gateway
+        self.telegram_component: TelegramComponentPort = telegram_component
+        self.db: MySQLDatabase = db
+        self.view: View = view
 
     @classmethod
     def create(
@@ -65,11 +65,11 @@ class ServiceComponent:
         for kline in klines:
             kline_mapped: dict = {
                 'open_time': round(int(kline[0]) / 1000),
-                'open_price': round(float(kline[1]), 2),
-                'high_price': round(float(kline[2]), 2),
-                'low_price': round(float(kline[3]), 2),
-                'close_price': round(float(kline[4]), 2),
-                'average_price': round((float(kline[2]) + float(kline[3])) / 2, 2),
+                'open_price': round(Decimal(kline[1]), 2),
+                'high_price': round(Decimal(kline[2]), 2),
+                'low_price': round(Decimal(kline[3]), 2),
+                'close_price': round(Decimal(kline[4]), 2),
+                'average_price': round((Decimal(kline[2]) + Decimal(kline[3])) / 2, 2),
                 'volume': kline[5],
                 'close_time': round(int(kline[6]) / 1000),
             }

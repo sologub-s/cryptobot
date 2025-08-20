@@ -4,7 +4,7 @@ from typing import Any
 import requests
 from requests import Response
 
-from tests.ports.telegram_http_transport_mock_port import TelegramHttpTransportComponentMockPort
+from tests.ports.telegram_http_transport_mock import TelegramHttpTransportComponentMockPort
 from cryptobot.ports.telegram_http_transport import TelegramHttpTransportComponentPort
 
 @dataclass(frozen=True)

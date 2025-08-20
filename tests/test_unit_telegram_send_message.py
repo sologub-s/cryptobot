@@ -1,7 +1,7 @@
 import pytest
 
 from cryptobot.components import ServiceComponent
-from tests.ports.telegram_http_transport_mock_port import TelegramHttpTransportComponentMockPort
+from tests.ports.telegram_http_transport_mock import TelegramHttpTransportComponentMockPort
 
 @pytest.mark.unit
 def test_unit_telegram_send_message(db_session_conn, apply_seed_fixture, make_config, make_di):
