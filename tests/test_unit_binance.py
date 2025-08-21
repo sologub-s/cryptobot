@@ -6,8 +6,11 @@ import pytest
 from cryptobot.components import ServiceComponent
 from mocks.binance.orders import get_mock_orders
 from mocks.binance.avg_price import get_mock_avg_price
+from mocks.binance.trades import get_mock_trades
+from tests.components.binance_api_adapter_mock import BinanceApiAdapterMock
 from tests.components.binance_client_adapter_mock import BinanceClientAdapterMock
 from tests.mocks.binance.asset_balance import get_mock_asset_balance
+from tests.mocks.binance.asset_transfers import get_mock_asset_transfers
 from tests.mocks.binance.historical_klines import get_mock_historical_klines
 
 
@@ -145,3 +148,50 @@ def test_unit_binance_get_asset_balance(db_session_conn, apply_seed_fixture, mak
         assert asset_balance.get('locked', None) == mock_asset_balance[asset]['locked']
 
     assert sc.get_asset_balance('unexisted_asset_sasadad') is None
+
+def test_unit_binance_get_all_trades(db_session_conn, apply_seed_fixture, make_config, make_di):
+    apply_seed_fixture(seed_name='common')
+    di = make_di
+    sc: ServiceComponent = di['service_component']
+    binance_api_adapter: BinanceApiAdapterMock = sc.binance_gateway.binance_api_adapter
+
+    mock_trades: dict[str, list[dict[str, str|int|bool]]] = get_mock_trades()
+
+    binance_api_adapter.seed_my_trades(my_trades=mock_trades)
+
+    symbols: list[str] = ['ETHUSDT',]
+
+    for symbol in symbols:
+        my_trades = sc.get_all_trades(binance_symbol=symbol)
+        assert len(mock_trades[symbol]) == len(my_trades)
+        for i in range(len(mock_trades[symbol])):
+            for key in mock_trades[symbol][i].keys():
+                assert mock_trades[symbol][i][key] == my_trades[i].get(key, None)
+
+def test_unit_binance_get_asset_transfer(db_session_conn, apply_seed_fixture, make_config, make_di):
+    apply_seed_fixture(seed_name='common')
+    di = make_di
+    sc: ServiceComponent = di['service_component']
+    binance_api_adapter: BinanceApiAdapterMock = sc.binance_gateway.binance_api_adapter
+
+    mock_asset_transfers: dict[str, dict[str, int]] = get_mock_asset_transfers()
+
+    binance_api_adapter.seed_asset_transfers(asset_transfers=mock_asset_transfers)
+
+    types: list[str] = [
+        'MAIN_UMFUTURE',
+        'UMFUTURE_MAIN',
+        'MAIN_CMFUTURE',
+        'CMFUTURE_MAIN',
+        'MAIN_MARGIN',
+        'MARGIN_MAIN',
+        'MAIN_MINING',
+        'MINING_MAIN',
+        'MAIN_FUNDING',
+        'FUNDING_MAIN',
+    ]
+
+    for type in types:
+        asset_transfer = sc.get_asset_transfer(type=type)
+        assert asset_transfer.get('total', None) is not None
+        assert asset_transfer.get('total', None) == mock_asset_transfers[type]['total']

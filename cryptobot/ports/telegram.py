@@ -6,7 +6,6 @@ from cryptobot.ports.telegram_http_transport import TelegramHttpTransportCompone
 
 @runtime_checkable
 class TelegramComponentPort(Protocol):
-    def __init__(self, bot_token: str, bot_api_secret_token: str, telegram_transport_component: TelegramHttpTransportComponentPort): ...
 
     @classmethod
     def create(cls, telegram_config: dict, telegram_transport_component: TelegramHttpTransportComponentPort): ...

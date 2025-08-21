@@ -4,6 +4,7 @@ import time
 from decimal import Decimal, ROUND_DOWN
 from logging import info, error
 from pprint import pformat
+from tokenize import triple_quoted
 from typing import Any
 
 import matplotlib
@@ -46,6 +47,16 @@ class MiscCommand(AbstractCommand):
 
     def execute(self):
         print('Misc...')
+        return True
+
+    def misc_all_trades(self):
+
+        all_trades = self._service_component.binance_gateway.get_all_trades('ETHUSDT')
+        print('All trades:')
+
+        return True
+
+    def misc_asset_balance(self):
         assets: list[str] = ['USDT','ETH','BTC',]
         for asset in assets:
             asset_balance = self._service_component.binance_gateway.binance_client_adapter.get_asset_balance('sdfsdfsf')
@@ -208,16 +219,6 @@ class MiscCommand(AbstractCommand):
             else:
                 error(f"Cannot save balance record: {balance_db.as_dict()}")
         """
-        return True
-
-    def misc_asset_ledgers(self):
-
-        ledgers = self._service_component.get_asset_ledger(
-            start_time=int(time.time()*1000) - 30*24*60*60*1000,
-            end_time=int(time.time()*1000),
-        )
-        print(f'Ledgers: {ledgers}')
-
         return True
 
     def misc_asset_transfer(self):

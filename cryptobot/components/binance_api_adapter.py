@@ -63,4 +63,6 @@ class BinanceApiAdapter(BinanceApiAdapterPort):
             else:
                 json_response = {"empty_response": True,}
             info(f"Success! Response: '{json.dumps(json_response)}'")
+        print('json_response')
+        print(json_response)
         return json_response

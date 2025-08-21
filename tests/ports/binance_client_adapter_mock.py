@@ -1,9 +1,5 @@
 from typing import Protocol, runtime_checkable, Any
 
-from binance import KLINE_INTERVAL_1DAY
-from binance.client import Client
-
-
 @runtime_checkable
 class BinanceClientAdapterMockPort(Protocol):
 

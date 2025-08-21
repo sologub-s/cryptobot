@@ -21,6 +21,7 @@ from cryptobot.ports.binance_client_adapter import BinanceClientAdapterPort
 from cryptobot.ports.binance_gateway import BinanceGatewayPort
 from cryptobot.views import view_helper
 from cryptobot.views.view import View
+from tests.components.binance_api_adapter_mock import BinanceApiAdapterMock
 from tests.components.binance_client_adapter_mock import BinanceClientAdapterMock
 from tests.components.telegram_http_transport_mock import TelegramHttpTransportMockComponent
 from tests.config import get_config
@@ -186,6 +187,7 @@ def make_di(make_config) -> dict[str, Any]:
         binance_api_key=config['binance']['api']['key'],
         binance_api_secret=config['binance']['api']['secret'],
     )
+    binance_api_adapter: BinanceApiAdapterMock = BinanceApiAdapterMock()
 
     binance_gateway: BinanceGatewayPort = BinanceGateway.create(
         binance_client_adapter=binance_client_adapter,

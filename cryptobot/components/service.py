@@ -91,9 +91,6 @@ class ServiceComponent:
     def get_asset_transfer(self, type: str, start_time=None, end_time=None, limit=100):
         return self.binance_gateway.get_asset_transfer(type=type, start_time=start_time, end_time=end_time, limit=limit)
 
-    def get_asset_ledger(self, asset=None, start_time=None, end_time=None, limit=100):
-        return self.binance_gateway.get_asset_ledger(asset=asset, start_time=start_time, end_time=end_time, limit=limit)
-
     def get_asset_balance(self, asset=None):
         return self.binance_gateway.get_asset_balance(asset)
 

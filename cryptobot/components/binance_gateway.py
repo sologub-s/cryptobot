@@ -128,7 +128,7 @@ class BinanceGateway(BinanceGatewayPort):
     Get internal transfers history (Spot-to-Funding and vise-versa).
     transfer_type: MAIN_FUNDING, FUNDING_MAIN, MAIN_UMFUTURE, ...
     """
-    def get_asset_transfer(self, type, start_time=None, end_time=None, limit=100):
+    def get_asset_transfer(self, type: str, start_time=None, end_time=None, limit=100) -> dict[str, dict[str, int]]:
         params = {
             "limit": limit,
         }
@@ -138,20 +138,4 @@ class BinanceGateway(BinanceGatewayPort):
             params["endTime"] = end_time
         if type:
             params["type"] = type
-
-        # @TODO clarify return structure/type
         return self.binance_api_adapter.request(endpoint="/sapi/v1/asset/transfer", params=params)
-
-    def get_asset_ledger(self, asset=None, start_time=None, end_time=None, limit=500):
-        params = {
-            "limit": limit,
-        }
-        if start_time:
-            params["startTime"] = start_time
-        if end_time:
-            params["endTime"] = end_time
-        if asset:
-            params["asset"] = asset
-
-        # @TODO clarify return structure/type
-        return self.binance_api_adapter.request(endpoint="/sapi/v1/asset/ledger", params=params)
