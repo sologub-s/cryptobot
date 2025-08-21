@@ -1,6 +1,3 @@
-from typing import Any
-
-
 def get_mock_asset_balance() -> dict[str, dict[str, str]]:
     return  {
         'USDT': {

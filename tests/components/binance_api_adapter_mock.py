@@ -1,11 +1,3 @@
-import hashlib
-import hmac
-import json
-import time
-from logging import error, info
-
-import requests
-
 from cryptobot.ports.binance_api_adapter import BinanceApiAdapterPort
 from tests.ports.binance_api_adapter_mock import BinanceApiAdapterMockPort
 

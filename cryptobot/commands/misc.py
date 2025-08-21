@@ -47,6 +47,13 @@ class MiscCommand(AbstractCommand):
 
     def execute(self):
         print('Misc...')
+
+        binance_client_adapter = self._service_component.binance_gateway.binance_client_adapter
+
+        symbol_info = binance_client_adapter.get_symbol_info('ETHUSDT')
+
+        print(symbol_info)
+
         return True
 
     def misc_all_trades(self):

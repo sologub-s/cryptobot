@@ -14,6 +14,7 @@ class BinanceClientAdapterMock(BinanceClientAdapterMockPort, BinanceClientAdapte
         self.memory_avg_price: dict[str, list[dict[str, Any]]] = {}
         self.memory_historical_klines: dict[str, list[list[Any]]] = {}
         self.memory_asset_balance: dict[str, dict[str, str]] = {}
+        self.memory_symbol_info: dict[str, Any] = {}
 
     @classmethod
     def create(cls,):
@@ -24,6 +25,7 @@ class BinanceClientAdapterMock(BinanceClientAdapterMockPort, BinanceClientAdapte
         self.memory_avg_price: dict[str, list[dict[str, Any]]] = {}
         self.memory_historical_klines: dict[str, list[list[Any]]] = {}
         self.memory_asset_balance: dict[str, dict[str, str]] = {}
+        self.memory_symbol_info: dict[str, Any] = {}
 
     def seed_orders(self, orders: list[dict[str, Any]], clear = True) -> None:
         if clear:
@@ -79,8 +81,11 @@ class BinanceClientAdapterMock(BinanceClientAdapterMockPort, BinanceClientAdapte
             return None
         return self.memory_asset_balance.get(asset, None)
 
+    def seed_symbol_info(self, symbol_info: dict[str, Any]) -> None:
+        self.memory_symbol_info = symbol_info
+
     def get_symbol_info(self, symbol: str) -> dict[str, Any]:
-        return self.binance_client.get_symbol_info(symbol)
+        return self.memory_symbol_info.get(symbol, {})
 
     def create_test_order(self, **params: Any) -> dict[str, Any]:
         return self.binance_client.create_test_order(**params)

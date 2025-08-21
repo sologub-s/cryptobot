@@ -9,9 +9,11 @@ from mocks.binance.avg_price import get_mock_avg_price
 from mocks.binance.trades import get_mock_trades
 from tests.components.binance_api_adapter_mock import BinanceApiAdapterMock
 from tests.components.binance_client_adapter_mock import BinanceClientAdapterMock
+from tests.mocks.binance import symbol_info
 from tests.mocks.binance.asset_balance import get_mock_asset_balance
 from tests.mocks.binance.asset_transfers import get_mock_asset_transfers
 from tests.mocks.binance.historical_klines import get_mock_historical_klines
+from tests.mocks.binance.symbol_info import get_mock_symbol_info
 
 
 @pytest.mark.unit
@@ -148,6 +150,54 @@ def test_unit_binance_get_asset_balance(db_session_conn, apply_seed_fixture, mak
         assert asset_balance.get('locked', None) == mock_asset_balance[asset]['locked']
 
     assert sc.get_asset_balance('unexisted_asset_sasadad') is None
+
+def test_unit_binance_get_symbol_info(db_session_conn, apply_seed_fixture, make_config, make_di):
+    apply_seed_fixture(seed_name='common')
+    di = make_di
+    sc: ServiceComponent = di['service_component']
+    binance_client_adapter: BinanceClientAdapterMock = sc.binance_gateway.binance_client_adapter
+
+    mock_symbol_info: dict[str, Any] = get_mock_symbol_info()
+    binance_client_adapter.seed_symbol_info(mock_symbol_info)
+
+    symbols: list[str] = ['ETHUSDT',]
+
+    for symbol in symbols:
+        symbol_info: dict[str, Any] = sc.binance_gateway.get_symbol_info(symbol)
+        assert symbol_info != {}
+        mock: Any = mock_symbol_info[symbol]
+        for key in mock.keys():
+            assert key in symbol_info
+            assert symbol_info.get(key, None) is not None
+            if key == 'allowedSelfTradePreventionModes':
+                assert len(symbol_info[key]) == len(mock[key])
+                for i in range(len(mock[key])):
+                    assert symbol_info[key][i] == mock[key][i]
+            elif key == 'filters':
+                assert len(symbol_info[key]) == len(mock[key])
+                for i in range(len(mock[key])):
+                    for subkey in mock[key][i].keys():
+                        assert symbol_info[key][i].get(subkey, None) is not None
+                        assert symbol_info[key][i][subkey] == mock[key][i][subkey]
+            elif key == 'orderTypes':
+                assert len(symbol_info[key]) == len(mock[key])
+                for i in range(len(mock[key])):
+                    assert symbol_info[key][i] == mock[key][i]
+            elif key == 'permissionSets':
+                assert len(symbol_info[key]) == len(mock[key])
+                for i in range(len(mock[key])):
+                    assert len(symbol_info[key][i]) == len(mock[key][i])
+                    for j in range(len(mock[key][i])):
+                        assert symbol_info[key][i][j] == mock[key][i][j]
+            elif key == 'permissions':
+                assert len(symbol_info[key]) == len(mock[key])
+                for i in range(len(mock[key])):
+                    assert symbol_info[key][i] == mock[key][i]
+            else:
+                assert symbol_info[key] == mock[key]
+
+
+
 
 def test_unit_binance_get_all_trades(db_session_conn, apply_seed_fixture, make_config, make_di):
     apply_seed_fixture(seed_name='common')
