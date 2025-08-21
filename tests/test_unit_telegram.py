@@ -1,3 +1,5 @@
+import io
+
 import pytest
 
 from cryptobot.components import ServiceComponent
