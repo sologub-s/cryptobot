@@ -1,8 +1,11 @@
+import time
+from decimal import Decimal
 from typing import Any
 
 from binance import Client, BinanceAPIException
 
 from cryptobot.commands.show_price_chart import KLINE_INTERVAL_1DAY
+from cryptobot.models import Order
 from cryptobot.ports.binance_client_adapter import BinanceClientAdapterPort
 from tests.ports.binance_client_adapter_mock import BinanceClientAdapterMockPort
 
@@ -87,8 +90,67 @@ class BinanceClientAdapterMock(BinanceClientAdapterMockPort, BinanceClientAdapte
     def get_symbol_info(self, symbol: str) -> dict[str, Any]:
         return self.memory_symbol_info.get(symbol, {})
 
-    def create_test_order(self, **params: Any) -> dict[str, Any]:
-        return self.binance_client.create_test_order(**params)
+    def _check_base_order_params(self, **params: Any) -> bool:
+        if params.get('symbol', None) is None or params['symbol'] not in ['ETHUSDT',]:
+            raise Exception
+        if params.get('side', None) is None or params['side'] not in ['BUY', 'SELL',]:
+            raise Exception
+        if params.get('type', None) is None or params['type'] not in ['LIMIT',]:
+            raise Exception
+        if params.get('timeInForce', None) is None or params['timeInForce'] not in ['GTC',]:
+            raise Exception
+        if params.get('quantity', None) is None or Decimal(params['quantity']) <= 0:
+            raise Exception
+        if params.get('price', None) is None or Decimal(params['price']) <= 0:
+            raise Exception
+        return True
 
-    def create_order(self, **params: Any) -> dict[str, Any]:
-        return self.binance_client.create_order(**params)
+    def create_test_order(self, **params: Any) -> dict[str, Any]:
+        self._check_base_order_params(**params)
+        return {}
+
+    def create_order(self, **params: Any) -> dict[str, Any] | None:
+        if self._check_base_order_params(**params):
+            params: dict[str, str] = {
+                'symbol': 'ETHUSDT',
+                'side': 'SELL',
+                'type': 'LIMIT',
+                'timeInForce': 'GTC',
+                'quantity': '0.00720000',
+                'price': '4410.00000000',
+            }
+
+            new_binance_id: int = 0
+            memory_orders_symbol: list[dict[str, Any]] = self.memory_orders.get(params['symbol'], [])
+            for memory_order in memory_orders_symbol:
+                new_binance_id = memory_order['orderId'] if memory_order['orderId'] > new_binance_id else new_binance_id
+            new_binance_id += 1
+
+            cur_time_millis: int = int(time.time() * 1000)
+
+            new_order: dict[str, Any] = {
+                'symbol': params['symbol'],
+                'orderId': new_binance_id,
+                'orderListId': -1,
+                'clientOrderId': params.get('newClientOrderId', hash(new_binance_id)),
+                'price': params['price'],
+                'origQty': params['quantity'],
+                'executedQty': '0.00000000',
+                'cummulativeQuoteQty': '0.00000000',
+                'status': 'NEW',
+                'timeInForce': params['timeInForce'],
+                'type': 'LIMIT',
+                'side': params['side'],
+                'stopPrice': '0.00000000',
+                'icebergQty': '0.00000000',
+                'time': cur_time_millis,
+                'updateTime': 0,
+                'isWorking': True,
+                'workingTime': cur_time_millis,
+                'origQuoteOrderQty': '0.00000000',
+                'selfTradePreventionMode': 'EXPIRE_MAKER',
+            }
+
+            self.memory_orders[params['symbol']].append(new_order)
+
+            return new_order

@@ -196,8 +196,64 @@ def test_unit_binance_get_symbol_info(db_session_conn, apply_seed_fixture, make_
             else:
                 assert symbol_info[key] == mock[key]
 
+def test_unit_binance_create_test_order_and_create_order(db_session_conn, apply_seed_fixture, make_config, make_di):
+    apply_seed_fixture(seed_name='common')
+    di = make_di
+    sc: ServiceComponent = di['service_component']
+    binance_client_adapter: BinanceClientAdapterMock = sc.binance_gateway.binance_client_adapter
 
+    binance_client_adapter.seed_orders(get_mock_orders())
 
+    params: dict[str, str] = {
+        'symbol': 'ETHUSDT',
+        'side': 'SELL',
+        'type': 'LIMIT',
+        'timeInForce': 'GTC',
+        'quantity': '0.00720000',
+        'price': '4410.00000000',
+    }
+
+    for key in params.keys():
+        broken_params = params.copy()
+        del broken_params[key]
+        with pytest.raises(Exception):
+            binance_client_adapter.create_test_order(**broken_params)
+
+    for key in ['quantity', 'price',]:
+        broken_params = params.copy()
+        broken_params[key] = '0.00000000'
+        with pytest.raises(Exception):
+            binance_client_adapter.create_test_order(**broken_params)
+        broken_params = params.copy()
+        broken_params[key] = '-1.00000000'
+        with pytest.raises(Exception):
+            binance_client_adapter.create_test_order(**broken_params)
+
+    assert binance_client_adapter.create_test_order(**params) == {}
+
+    prev_length = len(binance_client_adapter.memory_orders.get(params['symbol'], []))
+
+    assert binance_client_adapter.create_order(**params) is not None
+
+    assert len(binance_client_adapter.memory_orders.get(params['symbol'], [])) - 1 == prev_length
+
+    new_order: dict[str, Any] = binance_client_adapter.memory_orders.get(params['symbol'], [])[-1]
+
+    assert new_order['symbol'] == params['symbol']
+    assert new_order['price'] == params['price']
+    assert new_order['origQty'] == params['quantity']
+    assert new_order['status'] == 'NEW'
+    assert new_order['timeInForce'] == params['timeInForce']
+    assert new_order['type'] == 'LIMIT'
+    assert new_order['side'] == params['side']
+    assert new_order['stopPrice'] == '0.00000000'
+    assert new_order['icebergQty'] == '0.00000000'
+    assert new_order['time'] > 0
+    assert new_order['updateTime'] == 0
+    assert new_order['isWorking'] == True
+    assert new_order['workingTime'] == new_order['time']
+    assert new_order['origQuoteOrderQty'] == '0.00000000'
+    assert new_order['selfTradePreventionMode'] == 'EXPIRE_MAKER'
 
 def test_unit_binance_get_all_trades(db_session_conn, apply_seed_fixture, make_config, make_di):
     apply_seed_fixture(seed_name='common')
