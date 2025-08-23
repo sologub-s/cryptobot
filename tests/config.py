@@ -18,6 +18,4 @@ def get_config() -> dict:
         "pass": os.getenv("TEST_DATABASE_PASS", ""),
     }
 
-    config["view"]["views_folder"] = "../cryptobot/views"
-
     return config

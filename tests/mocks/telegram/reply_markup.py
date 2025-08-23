@@ -1,0 +1,2 @@
+def get_mock_reply_markup() -> str:
+    return '{"keyboard": [["show_orders"], ["show_settings"], ["show_price:ETHUSDT"], ["show_price_chart_options:ETHUSDT"]], "resize_keyboard": true, "one_time_keyboard": false}'

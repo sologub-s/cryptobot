@@ -9,7 +9,6 @@ from mocks.binance.avg_price import get_mock_avg_price
 from mocks.binance.trades import get_mock_trades
 from tests.components.binance_api_adapter_mock import BinanceApiAdapterMock
 from tests.components.binance_client_adapter_mock import BinanceClientAdapterMock
-from tests.mocks.binance import symbol_info
 from tests.mocks.binance.asset_balance import get_mock_asset_balance
 from tests.mocks.binance.asset_transfers import get_mock_asset_transfers
 from tests.mocks.binance.historical_klines import get_mock_historical_klines

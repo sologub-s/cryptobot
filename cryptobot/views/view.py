@@ -29,7 +29,7 @@ class View:
             render_vars = {}
         #template = self._environment.get_template(template + '.j2')
         template = self._environment.get_template(template)
-        print(f'Rendering template: \'{template}\'')
+        #print(f'Rendering template: \'{template}\'')
         return template.render(self._default_vars | render_vars)
 
 
