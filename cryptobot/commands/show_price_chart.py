@@ -1,6 +1,5 @@
 import datetime
 import io
-import json
 
 from cryptobot.commands import AbstractCommand
 from cryptobot.components import ServiceComponent
@@ -33,7 +32,7 @@ class ShowPriceChartCommand(AbstractCommand):
     def set_payload(self, binance_symbol: str, period: str, interval: str, chat_id: int):
         self._payload["binance_symbol"] = binance_symbol
         self._payload["period"] = period
-        print(f'interval: {interval}')
+        #print(f'interval: {interval}')
         self._payload["interval"] = interval
         self._payload["chat_id"] = chat_id
         self._initialized = True

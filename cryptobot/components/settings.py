@@ -1,4 +1,5 @@
 from decimal import Decimal
+from typing import Any
 
 from peewee import MySQLDatabase
 
@@ -48,16 +49,19 @@ class SettingsComponent:
         db_setting = Setting.select().where(Setting.the_key == key).first()
         if not db_setting:
             return None
-        if db_setting.the_type == SettingMapper.TYPE_INT:
-            return int(db_setting.the_value)
-        elif db_setting.the_type == SettingMapper.TYPE_FLOAT:
-            return float(db_setting.the_value)
-        elif db_setting.the_type == SettingMapper.TYPE_DECIMAL:
-            return Decimal(db_setting.the_value)
-        elif db_setting.the_type == SettingMapper.TYPE_BOOL:
-            return True if db_setting.the_value == 'true' else False
-        elif db_setting.the_type == SettingMapper.TYPE_STR:
-            return db_setting.the_value
+        return self._map_from_db(db_setting.the_type, db_setting.the_value)
+
+    def _map_from_db(self, the_type: str, the_value: Any) -> Any|None:
+        if the_type == SettingMapper.TYPE_INT:
+            return int(the_value)
+        elif the_type == SettingMapper.TYPE_FLOAT:
+            return float(the_value)
+        elif the_type == SettingMapper.TYPE_DECIMAL:
+            return Decimal(the_value)
+        elif the_type == SettingMapper.TYPE_BOOL:
+            return True if the_value == 'true' else False
+        elif the_type == SettingMapper.TYPE_STR:
+            return the_value
         else:
             return None
 
@@ -66,19 +70,25 @@ class SettingsComponent:
         if not db_setting:
             raise KeyError(f"Setting with the the_key='{key}' not found")
             #return Setting().fill({'the_key': key, 'the_value': value}).save() # only preset settings, no new
-        if db_setting.the_type == SettingMapper.TYPE_INT:
-            db_setting.the_value = str(value)
-        elif db_setting.the_type == SettingMapper.TYPE_FLOAT:
-            db_setting.the_value = str(value)
-        elif db_setting.the_type == SettingMapper.TYPE_DECIMAL:
-            db_setting.the_value = Decimal(value).to_eng_string()
-        elif db_setting.the_type == SettingMapper.TYPE_BOOL:
-            db_setting.the_value = 'true' if value == True else 'false'
-        elif db_setting.the_type == SettingMapper.TYPE_STR:
-            db_setting.the_value = str(value)
-        else:
+        db_setting.the_value = self._map_to_db(db_setting.the_type, value)
+        if db_setting.the_value is None:
             return 0
         db_setting.save()
         return db_setting.id
+
+    def _map_to_db(self, the_type: str, value: Any) -> Any|None:
+        if the_type == SettingMapper.TYPE_INT:
+            return str(value)
+        elif the_type == SettingMapper.TYPE_FLOAT:
+            return str(value)
+        elif the_type == SettingMapper.TYPE_DECIMAL:
+            return Decimal(value).to_eng_string()
+        elif the_type == SettingMapper.TYPE_BOOL:
+            return 'true' if value == True else 'false'
+        elif the_type == SettingMapper.TYPE_STR:
+            return str(value)
+        else:
+            return None
+
 
 

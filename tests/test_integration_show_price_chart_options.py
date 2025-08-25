@@ -2,12 +2,10 @@ import json
 
 import pytest
 
-from cryptobot.commands import ShowPriceCommand, ShowPriceChartOptionsCommand
+from cryptobot.commands import ShowPriceChartOptionsCommand
 from cryptobot.components import ServiceComponent
-from cryptobot.views.view_helper import dec_to_str, format_timestamp
 from tests.components.binance_client_adapter_mock import BinanceClientAdapterMock
 from tests.components.telegram_http_transport_mock import TelegramMessageDataObject
-from tests.mocks.binance.avg_price import get_mock_avg_price
 from tests.mocks.telegram.reply_markup import get_mock_reply_markup
 from tests.ports.telegram_http_transport_mock import TelegramHttpTransportComponentMockPort
 
@@ -20,7 +18,6 @@ def test_integration_show_price_chart_options(db_session_conn, apply_seed_fixtur
     config = make_config
     sc: ServiceComponent = di['service_component']
     tlg_transport: TelegramHttpTransportComponentMockPort = sc.telegram_component.telegram_http_transport_component
-    binance_client_adapter: BinanceClientAdapterMock = sc.binance_gateway.binance_client_adapter
 
     chat_id: int = 112233
     binance_symbols = ['ETHUSDT',]
@@ -76,17 +73,3 @@ def test_integration_show_price_chart_options(db_session_conn, apply_seed_fixtur
         assert msg_keyboard.data.get('text', None) is not None
         assert f'Or choose another command from the menu in the bottom.' in msg_keyboard.data.get('text', '')
         assert msg_keyboard.data.get('reply_markup', None) == get_mock_reply_markup()
-
-
-
-    """
-    
-    mem_msg: TelegramMessageDataObject = tlg_transport.get_from_memory(index=i)
-    assert mem_msg is not None
-    assert mem_msg.url == f'https://api.telegram.org/bot{config['telegram']['bot_token']}/sendMessage'
-    assert mem_msg.data.get('chat_id', None) == chat_id
-    assert mem_msg.data.get('disable_notification', None) == False
-    assert mem_msg.data.get('parse_mode', None) == 'HTML'
-    assert mem_msg.data.get('reply_markup', None) == get_mock_reply_markup()
-    assert mem_msg.files is None
-    """
