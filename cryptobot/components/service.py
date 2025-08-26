@@ -168,7 +168,7 @@ class ServiceComponent:
             with self.db.atomic():
                 # get asset balance from Binance
                 binance_balance = self.get_asset_balance(asset)
-                info(f"Asset {asset} balance: {binance_balance} -> {BalanceMapper.map_asset(binance_balance['asset'])}")
+                info(f"Asset {asset} balance: {binance_balance} -> {binance_balance['asset']} ({BalanceMapper.map_asset(binance_balance['asset'])})")
                 # last balance obj from db of the same asset with the same free&locked
                 if force_insert:
                     balance_db = None
