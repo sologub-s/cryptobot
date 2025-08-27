@@ -154,3 +154,47 @@ class BinanceClientAdapterMock(BinanceClientAdapterMockPort, BinanceClientAdapte
             self.memory_orders[params['symbol']].append(new_order)
 
             return new_order
+
+    def fake_change_order_status(self, binance_order_id: int, status: str) -> None:
+        for symbol in self.memory_orders.keys():
+            for i in range(len(self.memory_orders[symbol])):
+                if self.memory_orders[symbol][i]['orderId'] == binance_order_id:  # this is the order
+                    order = self.memory_orders[symbol][i]
+                    baseAsset: str = self.memory_symbol_info[symbol]['baseAsset']
+                    quoteAsset: str = self.memory_symbol_info[symbol]['quoteAsset']
+                    if status == 'CANCELED':
+                        # order['executedQty'] = order['origQty']
+                        cummulativeQuoteQty: Decimal = Decimal(order['origQty']) * Decimal(order['price'])
+                        # order['cummulativeQuoteQty'] = f"{cummulativeQuoteQty:.8f}"
+                        order['status'] = status
+                        self.memory_orders[symbol][i] = order
+
+                        if order['side'] == 'BUY':
+                            self.memory_asset_balance[quoteAsset]['locked'] = Decimal(self.memory_asset_balance[quoteAsset]['locked']) - cummulativeQuoteQty
+                            self.memory_asset_balance[quoteAsset]['locked'] = f"{self.memory_asset_balance[quoteAsset]['locked']:.8f}"
+                            self.memory_asset_balance[quoteAsset]['free'] = Decimal(self.memory_asset_balance[quoteAsset]['free']) + cummulativeQuoteQty
+                            self.memory_asset_balance[quoteAsset]['free'] = f"{self.memory_asset_balance[quoteAsset]['free']:.8f}"
+                        else:
+                            self.memory_asset_balance[baseAsset]['locked'] = Decimal(self.memory_asset_balance[baseAsset]['locked']) - Decimal(order['origQty'])
+                            self.memory_asset_balance[baseAsset]['locked'] = f"{self.memory_asset_balance[baseAsset]['locked']:.8f}"
+                            self.memory_asset_balance[baseAsset]['free'] = Decimal(self.memory_asset_balance[baseAsset]['free']) + Decimal(order['origQty'])
+                            self.memory_asset_balance[baseAsset]['free'] = f"{self.memory_asset_balance[baseAsset]['free']:.8f}"
+                    if status == 'FILLED':
+                        order['executedQty'] = order['origQty']
+                        cummulativeQuoteQty: Decimal = Decimal(order['origQty']) * Decimal(order['price'])
+                        order['status'] = status
+                        self.memory_orders[symbol][i] = order
+
+                        if order['side'] == 'BUY':
+                            self.memory_asset_balance[quoteAsset]['locked'] = Decimal(self.memory_asset_balance[quoteAsset]['locked']) - cummulativeQuoteQty
+                            self.memory_asset_balance[quoteAsset]['locked'] = f"{self.memory_asset_balance[quoteAsset]['locked']:.8f}"
+                            self.memory_asset_balance[baseAsset]['free'] = Decimal(self.memory_asset_balance[baseAsset]['free']) + Decimal(order['executedQty'])
+                            self.memory_asset_balance[baseAsset]['free'] = f"{self.memory_asset_balance[baseAsset]['free']:.8f}"
+                        else:
+                            self.memory_asset_balance[baseAsset]['locked'] = Decimal(self.memory_asset_balance[baseAsset]['locked']) - Decimal(order['executedQty'])
+                            self.memory_asset_balance[baseAsset]['locked'] = f"{self.memory_asset_balance[baseAsset]['locked']:.8f}"
+                            self.memory_asset_balance[quoteAsset]['free'] = Decimal(self.memory_asset_balance[quoteAsset]['free']) + cummulativeQuoteQty
+                            self.memory_asset_balance[quoteAsset]['free'] = f"{self.memory_asset_balance[quoteAsset]['free']:.8f}"
+
+
+

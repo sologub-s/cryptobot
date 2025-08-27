@@ -261,7 +261,6 @@ def test_unit_binance_get_all_trades(db_session_conn, apply_seed_fixture, make_c
     binance_api_adapter: BinanceApiAdapterMock = sc.binance_gateway.binance_api_adapter
 
     mock_trades: dict[str, list[dict[str, str|int|bool]]] = get_mock_trades()
-
     binance_api_adapter.seed_my_trades(my_trades=mock_trades)
 
     symbols: list[str] = ['ETHUSDT',]
