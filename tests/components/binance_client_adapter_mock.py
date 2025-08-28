@@ -111,6 +111,7 @@ class BinanceClientAdapterMock(BinanceClientAdapterMockPort, BinanceClientAdapte
 
     def create_order(self, **params: Any) -> dict[str, Any] | None:
         if self._check_base_order_params(**params):
+            """
             params: dict[str, str] = {
                 'symbol': 'ETHUSDT',
                 'side': 'SELL',
@@ -119,6 +120,7 @@ class BinanceClientAdapterMock(BinanceClientAdapterMockPort, BinanceClientAdapte
                 'quantity': '0.00720000',
                 'price': '4410.00000000',
             }
+            """
 
             new_binance_id: int = 0
             memory_orders_symbol: list[dict[str, Any]] = self.memory_orders.get(params['symbol'], [])
@@ -182,6 +184,7 @@ class BinanceClientAdapterMock(BinanceClientAdapterMockPort, BinanceClientAdapte
                     if status == 'FILLED':
                         order['executedQty'] = order['origQty']
                         cummulativeQuoteQty: Decimal = Decimal(order['origQty']) * Decimal(order['price'])
+                        order['cummulativeQuoteQty'] = f"{cummulativeQuoteQty:.8f}"
                         order['status'] = status
                         self.memory_orders[symbol][i] = order
 
