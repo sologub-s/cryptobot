@@ -1,10 +1,20 @@
 import argparse
+from logging import info, warning, error
 
 from cryptobot.commands import ShowOrdersCommand, WebserverCommand, HookCommand, ShowSettingsCommand
 from cryptobot.commands import ShowOrderStatusCommand, ShowPriceCommand
 from cryptobot.commands import ShowPriceChartOptionsCommand, ShowPriceChartCommand
 from cryptobot.commands import CronCommand
 from cryptobot.commands import MiscCommand
+from cryptobot.commands.cron_check_balance_from_binance import CronCheckBalanceFromBinanceCommand
+from cryptobot.commands.cron_do_orders_updating_routine import CronDoOrdersUpdatingRoutineCommand
+from cryptobot.commands.cron_notify_working import CronNotifyWorkingCommand
+from cryptobot.commands.cron_update_trades_for_partially_filled_orders import \
+    CronUpdateTradesForPartiallyFilledOrdersCommand
+from cryptobot.helpers import current_millis
+from cryptobot.models import CronJob
+
+millis_on_start = current_millis() - 10000 # dirty bidlokod
 
 def dispatch(di: dict, args) -> None | tuple[None, type[ShowOrdersCommand]] | tuple[str, None]:
 
@@ -106,7 +116,7 @@ def dispatch(di: dict, args) -> None | tuple[None, type[ShowOrdersCommand]] | tu
 
     else:
         err = f"ERROR: Unknown command: {args.command}\n"
-        print()
+        error(err)
         return err, None
 
 def parse_args(cli_name: str):
