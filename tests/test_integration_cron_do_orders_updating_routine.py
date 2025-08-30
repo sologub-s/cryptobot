@@ -12,6 +12,7 @@ from cryptobot.models import Order, Balance
 from cryptobot.views.view import View
 from tests.components.binance_api_adapter_mock import BinanceApiAdapterMock
 from tests.components.binance_client_adapter_mock import BinanceClientAdapterMock
+from tests.helpers import _get_new_safe_price, _print_tlg_messages
 from tests.mocks.binance.asset_balance import get_mock_asset_balance
 from tests.mocks.binance.avg_price import get_mock_avg_price
 from tests.mocks.binance.orders import get_mock_orders
@@ -157,27 +158,3 @@ def test_integration_cron_do_orders_updating_routine(db_session_conn, apply_seed
     assert db_order_new.side == OrderMapper.SIDE_SELL
     assert db_order_new.trades_checked == 0
     assert db_order_new.order_price == _get_new_safe_price(sc, 'ETHUSDT', 'SELL', db_order_after.order_price, Decimal(5))
-
-def _get_new_safe_price(sc: ServiceComponent, symbol: str, new_side: str, old_price: Decimal, percent: Decimal) -> Decimal:
-    if new_side == 'BUY':
-        new_price: str = f"{old_price - old_price / 100 * percent:.2f}"
-    else:
-        new_price: str = f"{old_price + old_price / 100 * percent:.2f}"
-
-    symbol_info = sc.binance_gateway.get_symbol_info(symbol)
-
-    tick_size = None
-    for f in symbol_info['filters']:
-        if f["filterType"] == "PRICE_FILTER":
-            tick_size = Decimal(f["tickSize"])
-
-    new_price = (Decimal(new_price) // tick_size) * tick_size
-    return new_price
-
-def _print_tlg_messages(tlg_transport: TelegramHttpTransportComponentMockPort):
-    print('====================================')
-    for i in range(tlg_transport.memory_length()):
-        print(tlg_transport.get_from_memory(i))
-        print('--------------------------------')
-    tlg_transport.clear()
-    print('====================================')

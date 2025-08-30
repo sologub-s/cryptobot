@@ -3,6 +3,7 @@ from decimal import Decimal
 import pytest
 
 from cryptobot.commands import CronCommand
+from cryptobot.commands.cron_check_balance_from_binance import CronCheckBalanceFromBinanceCommand
 from cryptobot.components import ServiceComponent
 from cryptobot.helpers import current_millis
 from cryptobot.mappers.balance_mapper import BalanceMapper
@@ -37,8 +38,7 @@ def test_integration_cron_check_balance_from_binance(db_session_conn, apply_seed
         balances_count_0[asset_binance] = Balance.select().where(Balance.asset == BalanceMapper.map_asset(asset_binance)).count()
 
     # check balance
-    _prepare_cron_jobs_table(['check-balance-from-binance'])
-    (CronCommand()
+    (CronCheckBalanceFromBinanceCommand()
     .set_payload(
         chat_id,
     )
@@ -52,8 +52,7 @@ def test_integration_cron_check_balance_from_binance(db_session_conn, apply_seed
         assert balances_count_1[asset_binance] - balances_count_0[asset_binance] == 1
 
     # check balance again
-    _prepare_cron_jobs_table(['check-balance-from-binance'])
-    (CronCommand()
+    (CronCheckBalanceFromBinanceCommand()
     .set_payload(
         chat_id,
     )
@@ -73,8 +72,7 @@ def test_integration_cron_check_balance_from_binance(db_session_conn, apply_seed
     binance_client_adapter.seed_asset_balance(mock_asset_balance)
 
     # check balance again
-    _prepare_cron_jobs_table(['check-balance-from-binance'])
-    (CronCommand()
+    (CronCheckBalanceFromBinanceCommand()
     .set_payload(
         chat_id,
     )
@@ -88,8 +86,7 @@ def test_integration_cron_check_balance_from_binance(db_session_conn, apply_seed
         assert balances_count_3[asset_binance] - balances_count_2[asset_binance] == 1
 
     # check balance again
-    _prepare_cron_jobs_table(['check-balance-from-binance'])
-    (CronCommand()
+    (CronCheckBalanceFromBinanceCommand()
     .set_payload(
         chat_id,
     )
@@ -101,17 +98,3 @@ def test_integration_cron_check_balance_from_binance(db_session_conn, apply_seed
     for asset_binance in BalanceMapper.asset_mapping.keys():
         balances_count_4[asset_binance] = Balance.select().where(Balance.asset == BalanceMapper.map_asset(asset_binance)).count()
         assert balances_count_4[asset_binance] - balances_count_3[asset_binance] == 0
-
-
-def _prepare_cron_jobs_table(execute_cron_jobs=None) -> None:
-    if execute_cron_jobs is None:
-        execute_cron_jobs = []
-    cron_jobs: list[CronJob] = list(
-        CronJob
-        .select()
-    )
-    for cron_job in cron_jobs:
-        cron_job.last_executed_at = current_millis() + (1000 * 3600)
-        if cron_job.name in execute_cron_jobs:
-            cron_job.last_executed_at = 0
-        cron_job.save()

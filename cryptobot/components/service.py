@@ -1,7 +1,7 @@
 import time
 from decimal import Decimal
 from io import BytesIO
-from logging import info, error
+from logging import info, error, warn
 from typing import Any
 
 from cryptobot.helpers.money import round_price
@@ -135,7 +135,7 @@ class ServiceComponent:
             m_err = "order_ids is empty, doing nothing..."
             l(self, m_err, 'info')
             return []
-        db_orders: list[Order] = Order.select().where(Order.id.in_(order_ids))
+        db_orders: list[Order] = list(Order.select().where(Order.id.in_(order_ids)))
         if len(db_orders) == 0:
             m_err = f"db_orders with ids: '{order_ids}' not found"
             l(self, m_err)

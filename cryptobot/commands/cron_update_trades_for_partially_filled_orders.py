@@ -1,17 +1,12 @@
-from decimal import Decimal
-from time import sleep
-
 from cryptobot.commands import AbstractCommand
 from cryptobot.components import ServiceComponent
-from cryptobot.mappers.balance_mapper import BalanceMapper
 from cryptobot.mappers.order_mapper import OrderMapper
-from cryptobot.models import Order, CronJob
+from cryptobot.models import Order
 from cryptobot.views.view import View
-from cryptobot.helpers import current_millis, increase_price_percent, decrease_price_percent, dec_to_str, \
-    l, sg
+from cryptobot.helpers import l
 
 import logging
-from logging import error, info
+from logging import info
 
 logging.basicConfig(level=logging.INFO)
 

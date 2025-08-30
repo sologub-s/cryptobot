@@ -1,5 +1,6 @@
 import time
 from decimal import Decimal
+from logging import warn, info
 from typing import Any
 
 from binance import Client, BinanceAPIException
@@ -158,6 +159,7 @@ class BinanceClientAdapterMock(BinanceClientAdapterMockPort, BinanceClientAdapte
             return new_order
 
     def fake_change_order_status(self, binance_order_id: int, status: str) -> None:
+        info("fake change order status")
         for symbol in self.memory_orders.keys():
             for i in range(len(self.memory_orders[symbol])):
                 if self.memory_orders[symbol][i]['orderId'] == binance_order_id:  # this is the order
@@ -198,6 +200,27 @@ class BinanceClientAdapterMock(BinanceClientAdapterMockPort, BinanceClientAdapte
                             self.memory_asset_balance[baseAsset]['locked'] = f"{self.memory_asset_balance[baseAsset]['locked']:.8f}"
                             self.memory_asset_balance[quoteAsset]['free'] = Decimal(self.memory_asset_balance[quoteAsset]['free']) + cummulativeQuoteQty
                             self.memory_asset_balance[quoteAsset]['free'] = f"{self.memory_asset_balance[quoteAsset]['free']:.8f}"
+                    if status == 'PARTIALLY_FILLED':
+                        order['status'] = status
+                        self.memory_orders[symbol][i] = order
+
+    def fake_apply_mock_trade(self, mock_trade: dict[str, Any]) -> None:
+        binance_order_id: int = mock_trade['orderId']
+        filled: bool = False
+        for symbol in self.memory_orders.keys():
+            #baseAsset: str = self.memory_symbol_info[symbol]['baseAsset']
+            #quoteAsset: str = self.memory_symbol_info[symbol]['quoteAsset']
+            for i in range(len(self.memory_orders[symbol])):
+                if self.memory_orders[symbol][i]['orderId'] == binance_order_id:  # this is the order
+                    order = self.memory_orders[symbol][i]
+                    order['executedQty'] = f"{Decimal(order['executedQty']) + Decimal(mock_trade['qty']):.8f}"
+                    order['cummulativeQuoteQty'] = f"{Decimal(mock_trade['qty']) * Decimal(mock_trade['price']):.8f}"
+                    self.memory_orders[symbol][i] = order
+                    if Decimal(order['executedQty']) >= Decimal(order['origQty']):
+                        info("FILLED !!!!!!!!!!")
+                        filled = True
+            if filled:
+                self.fake_change_order_status(binance_order_id=binance_order_id, status='FILLED')
 
 
 
