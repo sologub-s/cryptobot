@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from peewee import (
-    MySQLDatabase, Model, BigIntegerField, DecimalField, AutoField, SmallIntegerField, DatabaseProxy
+    MySQLDatabase, Model, BigIntegerField, DecimalField, AutoField, SmallIntegerField, DatabaseProxy, CharField
 )
 from cryptobot.mappers.order_mapper import OrderMapper
 
@@ -10,6 +10,7 @@ from .base import BaseModel
 class Order(BaseModel):
     # fields
     binance_order_id = BigIntegerField()
+    client_order_id = CharField(max_length=40, null=False, unique=True)
     binance_order_type = SmallIntegerField(default=0)
     binance_created_at = BigIntegerField(null=True)
     binance_updated_at = BigIntegerField(null=True)
@@ -66,6 +67,7 @@ class Order(BaseModel):
         return {
             "id": self.id,
             "binance_order_id": self.binance_order_id,
+            "client_order_id": self.client_order_id,
             "binance_order_type": self.binance_order_type,
             "created_at": self.created_at,
             "updated_at": self.updated_at,
@@ -85,6 +87,9 @@ class Order(BaseModel):
     # --- from binance ---
     def fill_from_binance(self, data: dict):
         self.binance_order_id = int(data.get("orderId", 0))
+        self.client_order_id = int(data.get("clientOrderId", ''))
+        if self.client_order_id.startswith("x-") or self.client_order_id.startswith("cb-"):
+            self.created_by_bot = 1
         self.binance_order_type = int(OrderMapper.map_type(data.get("type", 0)))
         if self.binance_created_at is None:
             self.binance_created_at = int(data.get("updateTime", 0))

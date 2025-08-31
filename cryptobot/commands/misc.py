@@ -47,13 +47,23 @@ class MiscCommand(AbstractCommand):
 
     def execute(self):
         print('Misc...')
+        orders = self._service_component.get_all_orders('ETHUSDT')
+        for order in orders:
+            print(order['clientOrderId'])
+            db_order: Order = Order.get_or_none(Order.binance_order_id == order['orderId'])
+            if not db_order:
+                continue
+            db_order.client_order_id = order['clientOrderId']
+            if order['clientOrderId'].startswith("x-"):
+                db_order.created_by_bot = 1
+            db_order.save()
 
+        return True
+
+    def misc_symbol_info(self):
         binance_client_adapter = self._service_component.binance_gateway.binance_client_adapter
-
         symbol_info = binance_client_adapter.get_symbol_info('ETHUSDT')
-
         print(symbol_info)
-
         return True
 
     def misc_all_trades(self):
