@@ -158,3 +158,4 @@ def test_integration_cron_do_orders_updating_routine(db_session_conn, apply_seed
     assert db_order_new.side == OrderMapper.SIDE_SELL
     assert db_order_new.trades_checked == 0
     assert db_order_new.order_price == _get_new_safe_price(sc, 'ETHUSDT', 'SELL', db_order_after.order_price, Decimal(5))
+    assert db_order_new.client_order_id.startswith('x-')

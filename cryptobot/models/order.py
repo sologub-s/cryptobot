@@ -87,7 +87,7 @@ class Order(BaseModel):
     # --- from binance ---
     def fill_from_binance(self, data: dict):
         self.binance_order_id = int(data.get("orderId", 0))
-        self.client_order_id = int(data.get("clientOrderId", ''))
+        self.client_order_id = str(data.get("clientOrderId", ''))
         if self.client_order_id.startswith("x-") or self.client_order_id.startswith("cb-"):
             self.created_by_bot = 1
         self.binance_order_type = int(OrderMapper.map_type(data.get("type", 0)))

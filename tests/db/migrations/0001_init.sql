@@ -32,6 +32,7 @@ CREATE TABLE `cron_jobs` (
 CREATE TABLE `orders` (
   `id` bigint(20) unsigned NOT NULL AUTO_INCREMENT,
   `binance_order_id` bigint(20) unsigned NOT NULL,
+  `client_order_id` char(40) DEFAULT NULL,
   `binance_order_type` tinyint(3) unsigned NOT NULL DEFAULT 0,
   `created_at` bigint(20) unsigned NOT NULL,
   `updated_at` bigint(20) unsigned DEFAULT NULL,

@@ -135,7 +135,7 @@ class BinanceClientAdapterMock(BinanceClientAdapterMockPort, BinanceClientAdapte
                 'symbol': params['symbol'],
                 'orderId': new_binance_id,
                 'orderListId': -1,
-                'clientOrderId': params.get('newClientOrderId', hash(new_binance_id)),
+                'clientOrderId': params.get('newClientOrderId', 'x-' + str(hash(new_binance_id))),
                 'price': params['price'],
                 'origQty': params['quantity'],
                 'executedQty': '0.00000000',

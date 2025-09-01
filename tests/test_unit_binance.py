@@ -1,3 +1,4 @@
+import random
 from decimal import Decimal
 from typing import Any
 
@@ -210,9 +211,12 @@ def test_unit_binance_create_test_order_and_create_order(db_session_conn, apply_
         'timeInForce': 'GTC',
         'quantity': '0.00720000',
         'price': '4410.00000000',
+        'newClientOrderId': 'x-' + str(hash(random.randint(1, 100000))),
     }
 
     for key in params.keys():
+        if key == 'newClientOrderId':
+            continue
         broken_params = params.copy()
         del broken_params[key]
         with pytest.raises(Exception):
@@ -253,6 +257,7 @@ def test_unit_binance_create_test_order_and_create_order(db_session_conn, apply_
     assert new_order['workingTime'] == new_order['time']
     assert new_order['origQuoteOrderQty'] == '0.00000000'
     assert new_order['selfTradePreventionMode'] == 'EXPIRE_MAKER'
+    assert new_order['clientOrderId'] == params['newClientOrderId']
 
 def test_unit_binance_get_all_trades(db_session_conn, apply_seed_fixture, make_config, make_di):
     apply_seed_fixture(seed_name='common')
