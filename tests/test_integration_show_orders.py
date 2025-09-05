@@ -63,25 +63,25 @@ def test_integration_show_orders(db_session_conn, apply_seed_fixture, make_confi
             'Status: NEW\n',
         ],
         [
-            '<code>34217627731</code>\n',
-            '<b>2025-08-15 18:50:09</b>\n',
+            '<code>34632411326</code>\n',
+            '<b>2025-08-22 17:02:08</b>\n',
             '<b>Type: LIMIT</b>\n',
-            'Side: SELL\n',
+            'Side: BUY\n',
             'Symbol: ETHUSDT\n',
-            'Price: 4620.00\n',
-            'Original quantity: 0.00690000\n',
+            'Price: 4189.50\n',
+            'Original quantity: 0.00760000\n',
             'Executed quantity: 0.00000000\n',
             'Cummulative quote quantity: 0.00000000\n',
             'Status: NEW\n',
         ],
         [
-            '<code>34285044672</code>\n',
-            '<b>2025-08-17 06:51:34</b>\n',
+            '<code>35055318220</code>\n',
+            '<b>2025-08-28 22:56:08</b>\n',
             '<b>Type: LIMIT</b>\n',
-            'Side: BUY\n',
+            'Side: SELL\n',
             'Symbol: ETHUSDT\n',
-            'Price: 4200.00\n',
-            'Original quantity: 0.00720000\n',
+            'Price: 4672.50\n',
+            'Original quantity: 0.00460000\n',
             'Executed quantity: 0.00000000\n',
             'Cummulative quote quantity: 0.00000000\n',
             'Status: NEW\n',
@@ -95,6 +95,6 @@ def test_integration_show_orders(db_session_conn, apply_seed_fixture, make_confi
     assert mem_msg.data.get('reply_markup', None) == get_mock_reply_markup()
     assert mem_msg.files is None
 
-    for i in range(len(msg_orders)):
+    for i in range(len(asserts)):
         for the_assert_substr in asserts[i]:
             assert the_assert_substr in msg_orders[i]

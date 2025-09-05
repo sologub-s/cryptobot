@@ -129,7 +129,7 @@ def test_integration_cron_do_orders_updating_routine(db_session_conn, apply_seed
     assert db_order_new.order_price == _get_new_safe_price(sc, 'ETHUSDT', 'BUY', db_order_after.order_price, Decimal(5))
 
     # id=33, symbol=ETHUSDT, side=BUY, status: NEW -> FILLED
-    id: int = 33
+    id: int = 44
     db_order: Order = Order.get_by_id(id)
     binance_order_id: int = db_order.binance_order_id
     db_balance_base_before: Balance = Balance.select().where(Balance.asset == BalanceMapper.ASSET_ETH).order_by(Balance.created_at.desc()).limit(1).get()
