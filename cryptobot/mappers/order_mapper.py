@@ -97,7 +97,7 @@ class OrderMapper:
         return None
 
     @classmethod
-    def map_status(cls, status: str) -> int:
+    def map_status(cls, status: str | None) -> int:
         if not status:
             return cls.STATUS_UNKNOWN
         status = status.upper()

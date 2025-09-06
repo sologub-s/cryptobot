@@ -1,7 +1,7 @@
 from decimal import Decimal
 
 from peewee import (
-    MySQLDatabase, Model, BigIntegerField, DecimalField, AutoField, SmallIntegerField, DatabaseProxy, CharField
+    BigIntegerField, DecimalField, SmallIntegerField, CharField
 )
 from cryptobot.mappers.order_mapper import OrderMapper
 
@@ -17,6 +17,8 @@ class Order(BaseModel):
     symbol = BigIntegerField(default=OrderMapper.SYMBOL_UNKNOWN)
     side = SmallIntegerField(default=OrderMapper.SIDE_UNKNOWN)
     order_price = DecimalField(max_digits=10, decimal_places=2, auto_round=True)
+    delta_up = DecimalField(max_digits=10, decimal_places=2, auto_round=True)
+    delta_down = DecimalField(max_digits=10, decimal_places=2, auto_round=True)
     original_quantity = DecimalField(max_digits=20, decimal_places=10, auto_round=True)
     executed_quantity = DecimalField(max_digits=20, decimal_places=10, auto_round=True)
     cummulative_quote_quantity = DecimalField(max_digits=20, decimal_places=10, auto_round=True)
@@ -76,6 +78,8 @@ class Order(BaseModel):
             "symbol": self.symbol,
             "side": self.side,
             "order_price": Decimal(self.order_price) if self.order_price else None,
+            "delta_up": Decimal(self.delta_up) if self.delta_up is not None else None,
+            "delta_down": Decimal(self.delta_down) if self.delta_down is not None else None,
             "original_quantity": Decimal(self.original_quantity) if self.original_quantity else None,
             "executed_quantity": Decimal(self.executed_quantity) if self.executed_quantity else None,
             "cummulative_quote_quantity": Decimal(self.cummulative_quote_quantity) if self.cummulative_quote_quantity else None,
@@ -100,5 +104,5 @@ class Order(BaseModel):
         self.original_quantity = Decimal(data.get("origQty", 0) or 0)
         self.executed_quantity = Decimal(data.get("executedQty", 0) or 0)
         self.cummulative_quote_quantity = Decimal(data.get("cummulativeQuoteQty", 0) or 0)
-        self.status = OrderMapper.map_status(data.get("status"))
+        self.status = OrderMapper.map_status(data.get("status", None))
         return self

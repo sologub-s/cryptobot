@@ -61,6 +61,8 @@ def test_integration_show_orders(db_session_conn, apply_seed_fixture, make_confi
             'Executed quantity: 0.00000000\n',
             'Cummulative quote quantity: 0.00000000\n',
             'Status: NEW\n',
+            'Delta up: 3.00%',
+            'Delta down: 3.00%',
         ],
         [
             '<code>34632411326</code>\n',
@@ -98,3 +100,6 @@ def test_integration_show_orders(db_session_conn, apply_seed_fixture, make_confi
     for i in range(len(asserts)):
         for the_assert_substr in asserts[i]:
             assert the_assert_substr in msg_orders[i]
+        if i > 0:
+            assert 'Delta up:' not in msg_orders[i]
+            assert 'Delta down:' not in msg_orders[i]
