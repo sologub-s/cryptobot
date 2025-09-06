@@ -8,9 +8,5 @@ Original quantity: {{ "{0:f}".format(db_order.original_quantity) }}
 Executed quantity: {{ "{0:f}".format(db_order.executed_quantity) }}
 Cummulative quote quantity: {{ "{0:f}".format(db_order.cummulative_quote_quantity) }}
 Status: {{ remap_db_order_status(db_order.status) }}
-{% if db_order.delta_up %}
-    Delta up: {{ dec_to_str(decimal(db_order.delta_up)) }}%
-{% endif %}
-{% if db_order.delta_down %}
-    Delta down: {{ dec_to_str(decimal(db_order.delta_down)) }}%
-{% endif %}
+{% if db_order.delta_up %}Delta up: {{ dec_to_str(decimal(db_order.delta_up)) }}%{% endif %}
+{% if db_order.delta_down %}Delta down: {{ dec_to_str(decimal(db_order.delta_down)) }}%{% endif %}
