@@ -1,6 +1,8 @@
 from .abstract import AbstractCommand
 from .show_orders import ShowOrdersCommand
 from .show_order_status import ShowOrderStatusCommand
+from .show_order_delta_options import ShowOrderDeltaOptionsCommand
+from .set_order_delta import SetOrderDeltaCommand
 from .show_price import ShowPriceCommand
 from .show_price_chart_options import ShowPriceChartOptionsCommand
 from .show_price_chart import ShowPriceChartCommand
@@ -14,6 +16,8 @@ __all__ = [
     "AbstractCommand",
     "ShowOrdersCommand",
     "ShowOrderStatusCommand",
+    "ShowOrderDeltaOptionsCommand",
+    "SetOrderDeltaCommand",
     "ShowPriceCommand",
     "ShowPriceChartOptionsCommand",
     "ShowPriceChartCommand",

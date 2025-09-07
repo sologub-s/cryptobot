@@ -9,7 +9,6 @@ from cryptobot.config import get_config
 from cryptobot.components import ServiceComponent, dispatch, parse_args, TelegramComponent, BinanceGateway, \
     BinanceClientAdapter, BinanceApiAdapter
 from cryptobot.helpers import get_project_root, init_settings_component
-from cryptobot.ports import binance_gateway
 from cryptobot.ports.binance_api_adapter import BinanceApiAdapterPort
 from cryptobot.ports.binance_client_adapter import BinanceClientAdapterPort
 from cryptobot.ports.binance_gateway import BinanceGatewayPort

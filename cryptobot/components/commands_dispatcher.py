@@ -1,7 +1,9 @@
 import argparse
+from decimal import Decimal
 from logging import info, warning, error
 
-from cryptobot.commands import ShowOrdersCommand, WebserverCommand, HookCommand, ShowSettingsCommand
+from cryptobot.commands import ShowOrdersCommand, WebserverCommand, HookCommand, ShowSettingsCommand, \
+    ShowOrderDeltaOptionsCommand, SetOrderDeltaCommand
 from cryptobot.commands import ShowOrderStatusCommand, ShowPriceCommand
 from cryptobot.commands import ShowPriceChartOptionsCommand, ShowPriceChartCommand
 from cryptobot.commands import CronCommand
@@ -31,6 +33,29 @@ def dispatch(di: dict, args) -> None | tuple[None, type[ShowOrdersCommand]] | tu
             ShowOrderStatusCommand()
                 .set_payload(
                     binance_order_id=args.binance_order_id,
+                    chat_id=args.chat_id,
+                )
+                .set_deps(di['service_component'], di['view'])
+        )
+    elif args.command == "show_order_delta_options":
+        return (
+            None,
+            ShowOrderDeltaOptionsCommand()
+                .set_payload(
+                    ward=args.ward,
+                    binance_order_id=args.binance_order_id,
+                    chat_id=args.chat_id,
+                )
+                .set_deps(di['service_component'], di['view'])
+        )
+    elif args.command == "set_order_delta":
+        return (
+            None,
+            SetOrderDeltaCommand()
+                .set_payload(
+                    ward=args.ward,
+                    binance_order_id=args.binance_order_id,
+                    percent=args.percent,
                     chat_id=args.chat_id,
                 )
                 .set_deps(di['service_component'], di['view'])
@@ -134,6 +159,19 @@ def parse_args(cli_name: str):
     parser_status.add_argument("--binance_order_id", type=int, help="Order ID")
     #parser_status.add_argument("--binance_symbol", default="ETHUSDT", help="Trading pair (symbol)")
     parser_status.add_argument("--chat_id", type=int, help="Telegram chat id")
+
+    # show_order_delta_options
+    parser_show_order_delta_options = subparsers.add_parser("show_order_delta_options", help="Show order delta options")
+    parser_show_order_delta_options.add_argument("--ward", type=str, help="Ward (up or down)")
+    parser_show_order_delta_options.add_argument("--binance_order_id", type=int, help="Order ID")
+    parser_show_order_delta_options.add_argument("--chat_id", type=int, help="Telegram chat id")
+
+    # set_order_delta
+    parser_set_order_delta = subparsers.add_parser("set_order_delta", help="Set order delta up|down value")
+    parser_set_order_delta.add_argument("--ward", type=str, help="Ward (up or down)")
+    parser_set_order_delta.add_argument("--binance_order_id", type=int, help="Order ID")
+    parser_set_order_delta.add_argument("--percent", type=str, help="Percent")
+    parser_set_order_delta.add_argument("--chat_id", type=int, help="Telegram chat id")
 
     # show_price
     parser_price = subparsers.add_parser("show_price", help="Show symbol price")

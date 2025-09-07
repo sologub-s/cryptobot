@@ -7,7 +7,7 @@ from typing import Any
 from cryptobot.helpers.money import round_price
 from cryptobot.views.view import View
 
-from peewee import MySQLDatabase
+from peewee import MySQLDatabase, DecimalField
 from cryptobot.helpers import current_millis, calculate_order_quantity, l
 from cryptobot.mappers.balance_mapper import BalanceMapper
 from cryptobot.mappers.order_mapper import OrderMapper
@@ -226,7 +226,75 @@ class ServiceComponent:
         message = self.view.render('telegram/orders/order_item.j2', {
             'db_order': db_order,
         })
-        self.send_telegram_message(chat_id, message)
+        keys = {
+            'Change delta_up': f"show_order_delta_options:up:{db_order.binance_order_id}",
+            'Change delta_down': f"show_order_delta_options:down:{db_order.binance_order_id}",
+        }
+        inline_keyboard: list = []
+        inline_keyboard_line: list = []
+        for key in keys:
+            inline_keyboard_line.append({"text": key, "callback_data": keys[key]})
+        inline_keyboard.append(inline_keyboard_line)
+        self.send_telegram_message(chat_id, message, inline_keyboard if db_order.status == OrderMapper.STATUS_NEW else None)
+
+    def show_order_delta_options(self, db_order: Order, ward: str, chat_id: int):
+        if ward not in ['up', 'down']:
+            l(self, f'ward must be either "up" or "down", but "{ward}" provided')
+            # @todo throw smth here
+            return None
+        message = self.view.render('telegram/orders/order_delta_options.j2', {
+            'db_order': db_order,
+            'ward': ward,
+        })
+        inline_keyboard: list[list[dict[str, str]]] = [
+            [
+                {'text': '1.0%', 'callback_data': f"set_order_delta:{ward}:{db_order.binance_order_id}:1.0"},
+                {'text': '1.5%', 'callback_data': f"set_order_delta:{ward}:{db_order.binance_order_id}:1.5"},
+                {'text': '2.0%', 'callback_data': f"set_order_delta:{ward}:{db_order.binance_order_id}:2.0"},
+                {'text': '2.5%', 'callback_data': f"set_order_delta:{ward}:{db_order.binance_order_id}:2.5"},
+            ],
+            [
+                {'text': '3.0%', 'callback_data': f"set_order_delta:{ward}:{db_order.binance_order_id}:3.0"},
+                {'text': '3.5%', 'callback_data': f"set_order_delta:{ward}:{db_order.binance_order_id}:3.5"},
+                {'text': '4.0%', 'callback_data': f"set_order_delta:{ward}:{db_order.binance_order_id}:4.0"},
+                {'text': '4.5%', 'callback_data': f"set_order_delta:{ward}:{db_order.binance_order_id}:4.5"},
+            ],
+            [
+                {'text': '5.0%', 'callback_data': f"set_order_delta:{ward}:{db_order.binance_order_id}:5.0"},
+                {'text': '5.5%', 'callback_data': f"set_order_delta:{ward}:{db_order.binance_order_id}:5.5"},
+                {'text': '6.0%', 'callback_data': f"set_order_delta:{ward}:{db_order.binance_order_id}:6.0"},
+                {'text': '6.5%', 'callback_data': f"set_order_delta:{ward}:{db_order.binance_order_id}:6.5"},
+            ],
+            [
+                {'text': '7.0%', 'callback_data': f"set_order_delta:{ward}:{db_order.binance_order_id}:7.0"},
+                {'text': '7.5%', 'callback_data': f"set_order_delta:{ward}:{db_order.binance_order_id}:7.5"},
+                {'text': '8.0%', 'callback_data': f"set_order_delta:{ward}:{db_order.binance_order_id}:8.0"},
+                {'text': '8.5%', 'callback_data': f"set_order_delta:{ward}:{db_order.binance_order_id}:8.5"},
+            ],
+            [
+                {'text': '9.0%', 'callback_data': f"set_order_delta:{ward}:{db_order.binance_order_id}:9.0"},
+                {'text': '9.5%', 'callback_data': f"set_order_delta:{ward}:{db_order.binance_order_id}:9.5"},
+                {'text': '10.0%', 'callback_data': f"set_order_delta:{ward}:{db_order.binance_order_id}:10.0"},
+                {'text': '10.5%', 'callback_data': f"set_order_delta:{ward}:{db_order.binance_order_id}:10.5"},
+            ],
+            [
+                {'text': 'none (default)', 'callback_data': f"set_order_delta:{ward}:{db_order.binance_order_id}:none"},
+            ],
+        ]
+        self.send_telegram_message(chat_id, message, inline_keyboard)
+
+    def set_order_delta(self, db_order: Order, ward: str, percent: str, chat_id: int):
+        if ward not in ['up', 'down']:
+            l(self, f'ward must be either "up" or "down", but "{ward}" provided')
+            # @todo throw smth here
+            return None
+        percent = None if percent == 'none' else Decimal(percent)
+        delta_field: DecimalField = Order.delta_up if ward == 'up' else Order.delta_down
+        if ward == 'up':
+            db_order.delta_up = percent
+        else:
+            db_order.delta_down = percent
+        db_order.save()
 
     def notify_order_status_changed(self, db_order: Order, previous_status: int, chat_id: int):
         # send telegram notification

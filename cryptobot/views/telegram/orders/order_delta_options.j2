@@ -1,0 +1,6 @@
+<code>{{ db_order.binance_order_id }} delta options</code>
+Editing delta_<code>{{ ward|upper }}</code>
+Current delta_{{ ward }}: {% if db_order.delta_up %}{{ dec_to_str(decimal(db_order.delta_up)) }}%{% else %}none{% endif %}
+To edit the setting, please choose one of the options below.
+You can manually set the % of delta by directly typing the command: <code>set_order_delta:{{ ward }}:{{ db_order.binance_order_id }}:xxx.xx</code> where <code>xxx.xx</code> - the percent to set, i.e. <code>set_order_delta:{{ ward }}:{{ db_order.binance_order_id }}:3.87</code> will set delta {{ ward }} to 3.87% .
+Also, you can type <code>set_order_delta:{{ ward }}:{{ db_order.binance_order_id }}:none</code> to reset delta_{{ ward }} to system-wide default value.

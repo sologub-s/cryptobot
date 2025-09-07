@@ -1,7 +1,8 @@
 import sys
 from logging import info, error
 
-from cryptobot.commands import AbstractCommand, ShowOrderStatusCommand
+from cryptobot.commands import AbstractCommand, ShowOrderStatusCommand, ShowOrderDeltaOptionsCommand, \
+    SetOrderDeltaCommand
 from cryptobot.commands import ShowPriceCommand, ShowPriceChartOptionsCommand, ShowPriceChartCommand
 from cryptobot.commands import ShowOrdersCommand
 from cryptobot.commands import ShowSettingsCommand
@@ -60,6 +61,29 @@ class HookCommand(AbstractCommand):
 
                 command = (ShowOrderStatusCommand()
                            .set_payload(binance_order_id=binance_order_id, chat_id=chat_id,)
+                           .set_deps(self._service_component, self._view)
+                           )
+                command.execute()
+
+            elif text.lower().startswith("show_order_delta_options:"):
+                text = text.replace(" ", "")
+                ward = text.split(":")[1]
+                binance_order_id = text.split(":")[2]
+
+                command = (ShowOrderDeltaOptionsCommand()
+                           .set_payload(ward=ward, binance_order_id=binance_order_id, chat_id=chat_id,)
+                           .set_deps(self._service_component, self._view)
+                           )
+                command.execute()
+
+            elif text.lower().startswith("set_order_delta:"):
+                text = text.replace(" ", "")
+                ward = text.split(":")[1]
+                binance_order_id = text.split(":")[2]
+                percent = text.split(":")[3]
+
+                command = (SetOrderDeltaCommand()
+                           .set_payload(ward=ward, binance_order_id=binance_order_id, percent=percent, chat_id=chat_id,)
                            .set_deps(self._service_component, self._view)
                            )
                 command.execute()
