@@ -217,6 +217,14 @@ class ServiceComponent:
         return order_filling_history.id
 
     def show_orders(self, db_orders: [Order], chat_id: int):
+        message = self.view.render('telegram/orders/show_orders.j2', {
+            'db_orders': db_orders,
+        })
+        self.send_telegram_message(chat_id, message)
+        for db_order in db_orders:
+            self.show_order_status(db_order=db_order, chat_id=chat_id)
+
+    def show_orders_old(self, db_orders: [Order], chat_id: int):
         message = self.view.render('telegram/orders/orders_list.j2', {
             'db_orders': db_orders,
         })

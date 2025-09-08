@@ -1,0 +1,5 @@
+{% if not db_orders %}
+    No orders
+{% else %}
+    <b>The list of orders (total: {{ db_orders | length }}):</b>
+{% endif %}

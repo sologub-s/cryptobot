@@ -1,3 +1,6 @@
+import json
+from logging import warn
+
 import pytest
 
 from cryptobot.commands import ShowOrdersCommand
@@ -26,8 +29,6 @@ def test_integration_show_orders(db_session_conn, apply_seed_fixture, make_confi
                )
     command.execute()
 
-    assert tlg_transport.memory_length() == 1
-
     statuses: list[int] = [
         OrderMapper.STATUS_UNKNOWN,
         OrderMapper.STATUS_PENDING_NEW,
@@ -37,18 +38,9 @@ def test_integration_show_orders(db_session_conn, apply_seed_fixture, make_confi
     ]
     db_open_orders_count = Order.select().where(Order.status.in_(statuses)).count()
 
-    mem_msg: TelegramMessageDataObject = tlg_transport.get_from_memory(index=0)
+    assert tlg_transport.memory_length() == db_open_orders_count + 1
 
-    assert mem_msg is not None
-
-    assert mem_msg.url == f'https://api.telegram.org/bot{config['telegram']['bot_token']}/sendMessage'
-    assert mem_msg.data.get('chat_id', None) == chat_id
-
-    assert mem_msg.data.get('text', '').lstrip('\n ').startswith(f'<b>The list of orders (total: {db_open_orders_count}):</b>')
-
-    msg_orders = mem_msg.data.get('text', '').split('---')
-    assert len(msg_orders) == db_open_orders_count
-
+    asserts_applied: int = 0
     asserts: list[list[str]] = [
         [
             '<code>34089919693</code>\n',
@@ -90,16 +82,37 @@ def test_integration_show_orders(db_session_conn, apply_seed_fixture, make_confi
         ],
     ]
 
-    assert mem_msg.url == f'https://api.telegram.org/bot{config['telegram']['bot_token']}/sendMessage'
-    assert mem_msg.data.get('chat_id', None) == chat_id
-    assert mem_msg.data.get('disable_notification', None) == False
-    assert mem_msg.data.get('parse_mode', None) == 'HTML'
-    assert mem_msg.data.get('reply_markup', None) == get_mock_reply_markup()
-    assert mem_msg.files is None
+    for i in range(db_open_orders_count + 1):
 
-    for i in range(len(asserts)):
-        for the_assert_substr in asserts[i]:
-            assert the_assert_substr in msg_orders[i]
-        if i > 0:
-            assert 'Delta up:' not in msg_orders[i]
-            assert 'Delta down:' not in msg_orders[i]
+        mem_msg: TelegramMessageDataObject = tlg_transport.get_from_memory(index=i)
+
+        assert mem_msg is not None
+
+        assert mem_msg.url == f'https://api.telegram.org/bot{config['telegram']['bot_token']}/sendMessage'
+        assert mem_msg.data.get('chat_id', None) == chat_id
+        assert mem_msg.data.get('disable_notification', None) == False
+        assert mem_msg.data.get('parse_mode', None) == 'HTML'
+        assert mem_msg.files is None
+
+        if i == 0:
+            assert mem_msg.data.get('text', '').lstrip('\n ').startswith(f'<b>The list of orders (total: {db_open_orders_count}):</b>')
+
+        msg_text = mem_msg.data.get('text', '')
+
+        for the_assert in asserts:
+            if the_assert[0] in msg_text:
+                asserts_applied += 1
+                deltas_present: bool = False
+                for the_assert_substr in the_assert:
+                    assert the_assert_substr in msg_text
+                    if 'Delta' in the_assert_substr:
+                        deltas_present = True
+                reply_markup: dict = json.loads(mem_msg.data.get('reply_markup', ''))
+                assert reply_markup.get('keyboard', None) == None
+                assert reply_markup.get('inline_keyboard', None) is not None
+                assert mem_msg.data.get('reply_markup', None) != get_mock_reply_markup()
+
+                if not deltas_present:
+                    assert 'Delta up:' not in msg_text
+                    assert 'Delta down:' not in msg_text
+
